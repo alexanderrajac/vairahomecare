@@ -45,22 +45,7 @@ async function main() {
   }
   console.log(`✓ Services seeded`);
 
-  // 3. Staff
-  console.log(`Seeding ${initialStaff.length} Staff members...`);
-  for (const st of initialStaff) {
-    const { error: stErr } = await client.from('staff').upsert({
-      id: st.id,
-      name: st.name,
-      role: st.role,
-      phone: st.phone,
-      email: st.email || null,
-      status: st.status,
-      data: st,
-      updated_at: new Date().toISOString(),
-    });
-    if (stErr) console.error(`Error seeding staff ${st.name}:`, stErr.message);
-  }
-  console.log(`✓ Staff seeded`);
+  // 3. Staff: Real staff register via Staff Portal or Supabase Auth
 
   // 4. Reviews
   console.log(`Seeding ${initialReviews.length} Reviews...`);

@@ -39,38 +39,7 @@ export function useVairaStore() {
   const [reviews, setReviews] = useState<CustomerReview[]>(initialReviews);
   const [settings, setSettings] = useState<BusinessSettings>(initialBusinessSettings);
   const [currentStaffSession, setCurrentStaffSession] = useState<StaffAuthSession | null>(null);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 'notif-01',
-      requestId: 'VC-2026-000101',
-      type: 'CONFIRMED',
-      title: 'Booking Confirmed',
-      message: 'Booking VC-2026-000101 confirmed with Sister Revathi M.',
-      timestamp: '2026-09-16T10:00:00Z',
-      read: true,
-      channel: 'WhatsApp',
-    },
-    {
-      id: 'notif-02',
-      requestId: 'VC-2026-000102',
-      type: 'CONTACTED',
-      title: 'Under Review',
-      message: 'Coordinator reached out to Meenakshi D. for care coordination.',
-      timestamp: '2026-09-17T15:00:00Z',
-      read: false,
-      channel: 'SMS',
-    },
-    {
-      id: 'notif-03',
-      requestId: 'VC-2026-000103',
-      type: 'RECEIVED',
-      title: 'New Request Received',
-      message: 'New request for Surgical Dressing from V. Chandrasekar.',
-      timestamp: '2026-09-18T08:10:00Z',
-      read: false,
-      channel: 'In-App',
-    },
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Hydrate from localStorage once on mount
   useEffect(() => {
