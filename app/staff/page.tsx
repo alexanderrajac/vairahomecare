@@ -245,7 +245,7 @@ export default function StaffPortalPage() {
                     required
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
-                    placeholder="+91 94441..."
+                    placeholder="+91 87545..."
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-slate-800"
                   />
                 </div>
@@ -320,7 +320,7 @@ export default function StaffPortalPage() {
     id: currentStaffSession.staffId,
     name: currentStaffSession.name,
     role: currentStaffSession.role,
-    phone: '+91 94441 55201',
+    phone: '+91 87545 19060',
     status: 'AVAILABLE' as const,
     shiftAvailability: 'Flexible' as const,
     assignedAreas: ['Kanchipuram', 'Vembedu'],

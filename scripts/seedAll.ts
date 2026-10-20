@@ -6,11 +6,11 @@ import {
   initialReviews,
 } from '../lib/data';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zlyslzjizkprwvpdgbkq.supabase.co';
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://izqlaicmbzlkfplmsyse.supabase.co';
 const key =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  'sb_publishable_3hFIWsgeJLbn7_CRlUr2VA_EN26DzU0';
+  'sb_publishable_syw4HeB_jO8p7bbcDP46OQ_nY7eSaQr';
 
 const client = createClient(url, key);
 

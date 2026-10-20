@@ -435,7 +435,7 @@ export function useVairaStore() {
         email,
         avatarUrl,
         role: 'Certified Nursing Staff',
-        phone: '+91 94441 ' + Math.floor(10000 + Math.random() * 90000),
+        phone: '+91 87545 ' + Math.floor(10000 + Math.random() * 90000),
         experienceYears: 4,
         verifiedSkills: ['Bedside Care', 'Vitals Monitoring', 'Elder Support'],
         assignedAreas: ['Kanchipuram', 'Vembedu'],

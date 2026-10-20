@@ -8,9 +8,9 @@ import {
 
 export const initialBusinessSettings: BusinessSettings = {
   name: 'Vaira Home Care Service',
-  phone1: '+91 94441 23456',
-  phone2: '+91 98402 78910',
-  whatsapp: '919444123456',
+  phone1: '+91 87545 19060',
+  phone2: '+91 87545 19060',
+  whatsapp: '918754519060',
   email: 'care@vairahomecare.com',
   address: 'No. 14, Gandhi Road, Near Bus Terminus, Vembedu & Kanchipuram, Tamil Nadu 631502',
   serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur', 'Chengalpattu'],
