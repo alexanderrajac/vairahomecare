@@ -71,7 +71,7 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
   const [confirmedBooking, setConfirmedBooking] = useState<BookingRequest | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
-  const officialUPIId = 'vairahomecare@icici';
+  const officialUPIId = '8754519060@waicic';
   const merchantName = initialBusinessSettings.name || 'Vaira Home Care Service';
 
   // Sync initial service

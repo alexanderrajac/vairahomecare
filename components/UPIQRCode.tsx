@@ -48,7 +48,7 @@ export default function UPIQRCode({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentDone, setPaymentDone] = useState(false);
 
-  const officialUPIId = 'vairahomecare@icici';
+  const officialUPIId = '8754519060@waicic';
   const merchantName = initialBusinessSettings.name || 'Vaira Home Care Service';
 
   const activeAmount =

@@ -65,7 +65,7 @@ export default function DirectBookingModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const officialUPIId = 'vairahomecare@icici';
+  const officialUPIId = '8754519060@waicic';
   const merchantName = initialBusinessSettings.name || 'Vaira Home Care Service';
 
   useEffect(() => {
