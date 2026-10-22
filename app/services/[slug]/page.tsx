@@ -36,6 +36,7 @@ export default function ServiceDetailsPage() {
   const service = publishedServices.find((s) => s.slug === slug);
 
   // Quick duration calculator state
+  const [calcShift, setCalcShift] = useState<'12h' | '24h'>('12h');
   const [calcDuration, setCalcDuration] = useState<number>(7);
 
   if (!service) {
@@ -75,7 +76,11 @@ export default function ServiceDetailsPage() {
     return `Starting at ₹${price.toLocaleString()}`;
   };
 
-  const calculatedEstimate = service.basePrice > 0 ? service.basePrice * calcDuration : null;
+  const currentRate = calcShift === '24h'
+    ? (service.price24h || service.basePrice)
+    : (service.price12h || service.basePrice);
+
+  const calculatedEstimate = currentRate > 0 ? currentRate * calcDuration : null;
 
   return (
     <div className="space-y-12 pb-24 md:pb-16 bg-slate-50/50">
@@ -125,10 +130,16 @@ export default function ServiceDetailsPage() {
                   <strong className="text-white mt-0.5 block text-xs sm:text-sm">{service.minimumDuration}</strong>
                 </div>
                 <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md col-span-2 sm:col-span-1">
-                  <span className="text-slate-400 block font-semibold text-[11px]">Base Rate</span>
-                  <strong className="text-emerald-400 mt-0.5 block text-xs sm:text-sm font-black">
-                    {service.basePrice > 0 ? `₹${service.basePrice.toLocaleString()}` : 'Assessed'}
-                  </strong>
+                  <span className="text-slate-400 block font-semibold text-[11px]">Shift Rates</span>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span className="text-white text-xs font-black">
+                      12h: ₹{(service.price12h || service.basePrice).toLocaleString()}
+                    </span>
+                    <span className="text-white/30">|</span>
+                    <span className="text-emerald-400 text-xs font-black">
+                      24h: ₹{(service.price24h || service.basePrice).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -198,7 +209,7 @@ export default function ServiceDetailsPage() {
                   <span>Quick Estimate Calculator</span>
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  Select your expected care duration:
+                  Select shift &amp; expected care duration:
                 </h3>
               </div>
               <div className="text-left sm:text-right">
@@ -206,33 +217,78 @@ export default function ServiceDetailsPage() {
                 <span className="text-2xl font-black text-emerald-700">
                   ₹{calculatedEstimate?.toLocaleString()}
                 </span>
-                <span className="text-[11px] text-slate-500 block">for {calcDuration} days</span>
+                <span className="text-[11px] text-slate-500 block">
+                  {calcShift === '24h' ? '24h Stay-in' : '12h Shift'} · {calcDuration} days
+                </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {[
-                { days: 3, label: '3 Days', desc: 'Short-term recovery' },
-                { days: 7, label: '7 Days', desc: 'Post-op standard' },
-                { days: 14, label: '14 Days', desc: 'Rehab routine' },
-                { days: 30, label: '30 Days', desc: 'Monthly elder care' },
-              ].map((opt) => (
+            {/* Shift selector buttons */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                1. Select Shift Type:
+              </label>
+              <div className="grid grid-cols-2 gap-3 max-w-md">
                 <button
-                  key={opt.days}
-                  onClick={() => setCalcDuration(opt.days)}
+                  type="button"
+                  onClick={() => setCalcShift('12h')}
                   className={`p-3 rounded-2xl border text-left transition-all ${
-                    calcDuration === opt.days
+                    calcShift === '12h'
                       ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-2 ring-emerald-500/20'
                       : 'border-slate-200 hover:border-slate-300 bg-white'
                   }`}
                 >
-                  <span className="block font-black text-sm text-slate-900">{opt.label}</span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5">{opt.desc}</span>
-                  <span className="block text-xs font-bold text-emerald-700 mt-1">
-                    ₹{(service.basePrice * opt.days).toLocaleString()}
+                  <span className="block font-black text-sm text-slate-900">12-Hour Shift</span>
+                  <span className="block text-xs font-bold text-emerald-700 mt-0.5">
+                    ₹{(service.price12h || service.basePrice).toLocaleString()} / day
                   </span>
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setCalcShift('24h')}
+                  className={`p-3 rounded-2xl border text-left transition-all ${
+                    calcShift === '24h'
+                      ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-2 ring-emerald-500/20'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <span className="block font-black text-sm text-slate-900">24-Hour Stay-in</span>
+                  <span className="block text-xs font-bold text-emerald-700 mt-0.5">
+                    ₹{(service.price24h || service.basePrice).toLocaleString()} / day
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Duration cards */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                2. Select Duration:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { days: 3, label: '3 Days', desc: 'Short-term recovery' },
+                  { days: 7, label: '7 Days', desc: 'Post-op standard' },
+                  { days: 14, label: '14 Days', desc: 'Rehab routine' },
+                  { days: 30, label: '30 Days', desc: 'Monthly elder care' },
+                ].map((opt) => (
+                  <button
+                    key={opt.days}
+                    onClick={() => setCalcDuration(opt.days)}
+                    className={`p-3 rounded-2xl border text-left transition-all ${
+                      calcDuration === opt.days
+                        ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-2 ring-emerald-500/20'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <span className="block font-black text-sm text-slate-900">{opt.label}</span>
+                    <span className="block text-[11px] text-slate-500 mt-0.5">{opt.desc}</span>
+                    <span className="block text-xs font-bold text-emerald-700 mt-1">
+                      ₹{(currentRate * opt.days).toLocaleString()}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <p className="text-[11px] text-slate-500 italic">
@@ -372,9 +428,22 @@ export default function ServiceDetailsPage() {
                 </span>
                 <CreditCard className="w-5 h-5 text-emerald-400" />
               </div>
-              <div className="mt-4">
-                <div className="text-2xl sm:text-3xl font-black text-emerald-400">
-                  {formatPricing(service.pricingModel, service.basePrice)}
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                    <span className="text-[10px] text-slate-300 uppercase font-bold tracking-wider block">12-Hour Shift</span>
+                    <span className="text-2xl font-black text-white mt-1 block">
+                      ₹{(service.price12h || service.basePrice).toLocaleString()}
+                    </span>
+                    <span className="text-[11px] text-slate-400">Day or Night Shift</span>
+                  </div>
+                  <div className="bg-emerald-500/20 p-4 rounded-2xl border border-emerald-400/30">
+                    <span className="text-[10px] text-emerald-300 uppercase font-bold tracking-wider block">24-Hour Stay-in</span>
+                    <span className="text-2xl font-black text-emerald-400 mt-1 block">
+                      ₹{(service.price24h || service.basePrice).toLocaleString()}
+                    </span>
+                    <span className="text-[11px] text-emerald-200/80">Continuous Bedside Care</span>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-300 mt-2 leading-relaxed">
                   {service.additionalChargesNotice}

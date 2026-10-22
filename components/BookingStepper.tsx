@@ -63,6 +63,7 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [preferredDate, setPreferredDate] = useState(tomorrowStr);
   const [preferredStartTime, setPreferredStartTime] = useState('08:00 AM');
+  const [shiftType, setShiftType] = useState<'12h' | '24h'>('12h');
   const [preferredDuration, setPreferredDuration] = useState('7 Days');
   const [recurringType, setRecurringType] = useState<'one-time' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [selectedDays, setSelectedDays] = useState<string[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
@@ -110,7 +111,7 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
 
   // Price Calculation
   const calculateEstimate = () => {
-    if (!selectedService) return { base: 0, durationMultiplier: 1, total: 0, determined: false };
+    if (!selectedService) return { base: 0, durationMultiplier: 1, total: 0, determined: false, rate: 0 };
 
     let multiplier = 1;
     if (recurringType === 'one-time') {
@@ -127,18 +128,24 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
       multiplier = 7;
     }
 
-    if (selectedService.pricingModel === 'custom' || selectedService.basePrice === 0) {
+    const rate = shiftType === '24h'
+      ? (selectedService.price24h || selectedService.basePrice)
+      : (selectedService.price12h || selectedService.basePrice);
+
+    if (rate === 0) {
       return {
         base: 0,
+        rate: 0,
         durationMultiplier: multiplier,
         total: 0,
         determined: false,
       };
     }
 
-    const total = selectedService.basePrice * multiplier;
+    const total = rate * multiplier;
     return {
-      base: selectedService.basePrice,
+      base: rate,
+      rate,
       durationMultiplier: multiplier,
       total,
       determined: true,
@@ -227,6 +234,7 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
           preferredDate,
           preferredStartTime,
           preferredDuration,
+          shiftType: shiftType === '24h' ? '24 Hours Stay-in' : '12 Hours (Day/Night)',
           recurringType,
           recurringDays: recurringType !== 'one-time' ? selectedDays : undefined,
           startDate: preferredDate,
@@ -362,10 +370,15 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
                       </div>
                       <p className="text-xs text-slate-500 mt-1.5 line-clamp-2">{service.shortDescription}</p>
                       <div className="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                        <span className="font-bold text-emerald-700">
-                          {service.basePrice > 0 ? `₹${service.basePrice.toLocaleString()}` : 'Custom'}
-                        </span>
-                        <span className="text-slate-400 text-[11px]">{service.availabilityHours}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
+                            12h: ₹{(service.price12h || service.basePrice).toLocaleString()}
+                          </span>
+                          <span className="font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md text-[11px]">
+                            24h: ₹{(service.price24h || service.basePrice).toLocaleString()}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-[11px] hidden sm:inline">{service.availabilityHours}</span>
                       </div>
                     </div>
                   );
@@ -722,7 +735,67 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Shift Duration Selection (12h vs 24h) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Select Care Shift Duration <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div
+                    onClick={() => {
+                      setShiftType('12h');
+                      if (preferredStartTime === '24h Continuous') setPreferredStartTime('08:00 AM');
+                    }}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start justify-between ${
+                      shiftType === '12h'
+                        ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-sm text-slate-900">12-Hour Shift</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Day / Night</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Day Shift (8 AM - 8 PM) or Night Shift (8 PM - 8 AM)</p>
+                      <div className="mt-2 text-sm font-black text-slate-900">
+                        ₹{(selectedService.price12h || selectedService.basePrice).toLocaleString()} <span className="text-xs font-medium text-slate-500">/ day</span>
+                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${shiftType === '12h' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
+                      {shiftType === '12h' && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => {
+                      setShiftType('24h');
+                      setPreferredStartTime('24h Continuous');
+                    }}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start justify-between ${
+                      shiftType === '24h'
+                        ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-sm text-slate-900">24-Hour Stay-in Care</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">Round-The-Clock</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Continuous stay-in bedside nursing and companion support</p>
+                      <div className="mt-2 text-sm font-black text-emerald-700">
+                        ₹{(selectedService.price24h || selectedService.basePrice).toLocaleString()} <span className="text-xs font-medium text-slate-500">/ day</span>
+                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${shiftType === '24h' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
+                      {shiftType === '24h' && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -946,11 +1019,15 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
 
               <div className="py-4 space-y-2.5 text-xs sm:text-sm">
                 <div className="flex justify-between text-slate-300">
-                  <span>Base Rate:</span>
-                  <span>
-                    {selectedService.basePrice > 0
-                      ? `₹${selectedService.basePrice.toLocaleString()} (${selectedService.pricingModel.replace(/_/g, ' ')})`
-                      : 'Assessed on Request'}
+                  <span>Selected Shift:</span>
+                  <span className="font-bold text-white">
+                    {shiftType === '24h' ? '24-Hour Stay-in Care' : '12-Hour Shift (Day/Night)'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Daily Rate:</span>
+                  <span className="font-bold text-emerald-300">
+                    ₹{estimate.rate.toLocaleString()} / day
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-300">

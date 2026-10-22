@@ -6,40 +6,38 @@ import {
   Settings,
   Plus,
   Edit2,
-  Trash2,
-  Check,
-  X,
   Eye,
   EyeOff,
+  Save,
+  X,
+  RefreshCw,
+  Package,
+  DollarSign,
   Clock,
   MapPin,
-  CreditCard,
-  ShieldCheck,
-  Save,
 } from 'lucide-react';
 import { useVairaStore } from '@/lib/store';
-import { ServiceItem, PricingModel, ServiceCategory } from '@/lib/types';
+import { ServiceItem, PricingModel } from '@/lib/types';
 
 export default function AdminServicesConfigPage() {
   const {
     services,
     addService,
     updateService,
-    deleteService,
     toggleServicePublish,
     isHydrated,
   } = useVairaStore();
 
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
-
-  // Form Fields State
   const [formData, setFormData] = useState<Partial<ServiceItem>>({});
+  const [saved, setSaved] = useState(false);
 
   if (!isHydrated) {
     return (
-      <div className="py-20 text-center text-sm text-slate-500">
-        Loading service configuration portal...
+      <div className="flex items-center justify-center py-24 text-slate-400 gap-3">
+        <RefreshCw className="w-5 h-5 animate-spin" />
+        <span className="text-sm font-medium">Loading service configuration...</span>
       </div>
     );
   }
@@ -57,7 +55,7 @@ export default function AdminServicesConfigPage() {
       slug: 'new-service-slug',
       name: 'New Home Care Service',
       category: 'nursing',
-      shortDescription: 'Brief description of service for cards and search...',
+      shortDescription: 'Brief description for cards and search...',
       image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80',
       whoThisIsFor: ['Patients recovering at home'],
       whatIncluded: ['Basic vitals documentation', 'Bedside hygiene'],
@@ -82,137 +80,163 @@ export default function AdminServicesConfigPage() {
   const handleSaveForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.slug) return;
-
     if (isCreatingNew) {
       addService(formData as any);
-      alert('New service successfully added to catalog!');
     } else if (editingService) {
       updateService(editingService.id, formData);
-      alert('Service settings updated! Changes reflect live on website.');
     }
-
-    setEditingService(null);
-    setIsCreatingNew(false);
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+      setEditingService(null);
+      setIsCreatingNew(false);
+    }, 1200);
   };
 
+  const publishedCount = services.filter((s) => s.isPublished).length;
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+    <div className="space-y-5 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <Link href="/admin" className="text-xs font-bold text-slate-400 hover:text-slate-600">
-              Operations
-            </Link>
-            <span className="text-xs text-slate-300">/</span>
-            <span className="text-xs font-bold text-emerald-700">Service Configurator</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
-            Service Catalog & Pricing Configuration
-          </h1>
+          <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest mb-0.5">Service Config</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Service Catalog &amp; Pricing</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Configure service scopes, transparent pricing models, inclusions, exclusions, and visibility without any code changes.
+            Configure scopes, pricing models, inclusions, and visibility — no code changes needed.
           </p>
         </div>
-
-        <button
-          onClick={handleCreateClick}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-sm transition-all self-start sm:self-auto"
-        >
+        <button onClick={handleCreateClick} className="btn-primary flex-shrink-0">
           <Plus className="w-4 h-4" />
-          <span>Add New Service</span>
+          Add New Service
         </button>
       </div>
 
-      {/* Services Table List (Section 16) */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Catalog Services ({services.length})
-          </span>
-          <span className="text-xs text-slate-400">
-            {services.filter((s) => s.isPublished).length} Active Online
-          </span>
-        </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Services', value: services.length, icon: <Package className="w-4 h-4 text-slate-600" />, bg: 'bg-slate-100' },
+          { label: 'Active Online', value: publishedCount, icon: <Eye className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50' },
+          { label: 'Drafts', value: services.length - publishedCount, icon: <EyeOff className="w-4 h-4 text-amber-600" />, bg: 'bg-amber-50' },
+          {
+            label: 'Avg. Base Price',
+            value: `₹${Math.round(services.reduce((s, srv) => s + srv.basePrice, 0) / Math.max(services.length, 1)).toLocaleString('en-IN')}`,
+            icon: <DollarSign className="w-4 h-4 text-teal-600" />,
+            bg: 'bg-teal-50',
+          },
+        ].map((card, i) => (
+          <div key={i} className="kpi-card animate-slide-up">
+            <div className={`w-8 h-8 ${card.bg} rounded-xl flex items-center justify-center mb-2`}>
+              {card.icon}
+            </div>
+            <div className="stat-number text-xl text-slate-900">{card.value}</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{card.label}</div>
+          </div>
+        ))}
+      </div>
 
+      {/* Services Table */}
+      <div className="section-card animate-slide-up delay-200">
+        <div className="section-card-header">
+          <div>
+            <h2 className="font-bold text-slate-900 text-sm">Catalog Services ({services.length})</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{publishedCount} active · {services.length - publishedCount} draft</p>
+          </div>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 uppercase tracking-wider font-bold">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Service Name & Slug</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Pricing Model & Rate</th>
-                <th className="px-4 py-3">Availability</th>
-                <th className="px-4 py-3">Areas</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th>Status</th>
+                <th>Service Name &amp; Slug</th>
+                <th>Category</th>
+                <th>Pricing</th>
+                <th>Availability</th>
+                <th>Service Areas</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {services.map((srv) => (
-                <tr key={srv.id} className="hover:bg-slate-50/80 transition-colors">
-                  {/* Status Toggle */}
-                  <td className="px-4 py-3 whitespace-nowrap">
+                <tr key={srv.id}>
+                  {/* Publish Toggle */}
+                  <td>
                     <button
                       onClick={() => toggleServicePublish(srv.id)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1.5 transition-colors ${
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
                         srv.isPublished
-                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200'
                       }`}
-                      title="Click to toggle publish"
+                      title="Click to toggle"
                     >
-                      {srv.isPublished ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                      <span>{srv.isPublished ? 'Active' : 'Disabled'}</span>
+                      {srv.isPublished
+                        ? <><Eye className="w-3 h-3" /> Active</>
+                        : <><EyeOff className="w-3 h-3" /> Draft</>
+                      }
                     </button>
                   </td>
 
-                  {/* Name & Slug */}
-                  <td className="px-4 py-3">
-                    <div className="font-bold text-slate-900 text-sm">{srv.name}</div>
-                    <div className="text-slate-400 font-mono text-[11px]">/services/{srv.slug}</div>
+                  {/* Name */}
+                  <td>
+                    <div className="font-bold text-slate-900 text-xs">{srv.name}</div>
+                    <div className="text-slate-400 font-mono text-[10px] mt-0.5">/services/{srv.slug}</div>
                   </td>
 
                   {/* Category */}
-                  <td className="px-4 py-3 whitespace-nowrap capitalize font-medium text-slate-700">
-                    {srv.category}
+                  <td>
+                    <span className="badge badge-completed capitalize">{srv.category}</span>
                   </td>
 
                   {/* Pricing */}
-                  <td className="px-4 py-3 whitespace-nowrap font-bold text-emerald-700">
-                    {srv.basePrice > 0 ? `₹${srv.basePrice.toLocaleString()}` : 'Custom'}
-                    <span className="text-[10px] text-slate-400 font-normal block">
-                      {srv.pricingModel.replace(/_/g, ' ')}
-                    </span>
+                  <td className="whitespace-nowrap">
+                    <div className="font-extrabold text-slate-900 text-xs">
+                      12h: ₹{(srv.price12h || srv.basePrice).toLocaleString('en-IN')}
+                    </div>
+                    <div className="font-extrabold text-emerald-700 text-xs mt-0.5">
+                      24h: ₹{(srv.price24h || srv.basePrice).toLocaleString('en-IN')}
+                    </div>
                   </td>
 
                   {/* Availability */}
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-700">
-                    {srv.availabilityHours}
+                  <td>
+                    <div className="flex items-center gap-1 text-xs text-slate-600">
+                      <Clock className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                      {srv.availabilityHours}
+                    </div>
                   </td>
 
                   {/* Areas */}
-                  <td className="px-4 py-3 max-w-xs truncate text-slate-500">
-                    {srv.serviceAreas.join(', ')}
+                  <td>
+                    <div className="flex flex-wrap gap-1 max-w-[160px]">
+                      {srv.serviceAreas.slice(0, 3).map((area) => (
+                        <span key={area} className="badge badge-completed text-[9px]">{area}</span>
+                      ))}
+                      {srv.serviceAreas.length > 3 && (
+                        <span className="text-[10px] text-slate-400">+{srv.serviceAreas.length - 3}</span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-3 text-right whitespace-nowrap space-x-2">
-                    <Link
-                      href={`/services/${srv.slug}`}
-                      target="_blank"
-                      className="inline-block p-1.5 text-slate-400 hover:text-emerald-700"
-                      title="Preview Customer Page"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => handleEditClick(srv)}
-                      className="inline-block p-1.5 text-slate-600 hover:text-blue-600"
-                      title="Edit Service Configuration"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                  <td className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link
+                        href={`/services/${srv.slug}`}
+                        target="_blank"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                        title="Preview"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </Link>
+                      <button
+                        onClick={() => handleEditClick(srv)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -221,198 +245,206 @@ export default function AdminServicesConfigPage() {
         </div>
       </div>
 
-      {/* EDIT / CREATE SERVICE CONFIGURATION MODAL (Section 16) */}
+      {/* Edit / Create Modal */}
       {(editingService || isCreatingNew) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl space-y-5 max-h-[92vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="modal-backdrop">
+          <div className="modal-panel w-full max-w-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <div>
-                <h3 className="font-bold text-slate-900 text-lg">
-                  {isCreatingNew ? 'Create New Service' : `Configure Service: ${editingService?.name}`}
+                <h3 className="font-bold text-slate-900 text-base">
+                  {isCreatingNew ? 'Create New Service' : `Edit: ${editingService?.name}`}
                 </h3>
-                <p className="text-xs text-slate-500">All fields are editable by the admin team.</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {isCreatingNew ? 'Configure a new service for the catalog.' : 'All fields can be edited and saved.'}
+                </p>
               </div>
               <button
-                onClick={() => {
-                  setEditingService(null);
-                  setIsCreatingNew(false);
-                }}
-                className="text-slate-400 hover:text-slate-700 p-1"
+                onClick={() => { setEditingService(null); setIsCreatingNew(false); }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveForm} className="space-y-4 overflow-y-auto pr-1 flex-1 text-xs">
-              {/* Basic Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Form */}
+            <form onSubmit={handleSaveForm} className="flex-1 overflow-y-auto">
+              <div className="p-5 space-y-4">
+
+                {/* Basic */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="form-label">Service Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="form-input"
+                      placeholder="e.g. 24-Hour Home Nursing"
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">URL Slug *</label>
+                    <input
+                      type="text"
+                      value={formData.slug || ''}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      required
+                      className="form-input font-mono"
+                      placeholder="e.g. 24-hour-home-nursing"
+                    />
+                  </div>
+                </div>
+
+                {/* Description */}
                 <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Service Name *</label>
-                  <input
-                    type="text"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  <label className="form-label">Short Description *</label>
+                  <textarea
+                    rows={2}
+                    value={formData.shortDescription || ''}
+                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
+                    className="form-input resize-none"
+                    placeholder="Brief description shown on service cards and search results..."
                   />
                 </div>
 
+                {/* Pricing */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="form-label">Pricing Model</label>
+                    <select
+                      value={formData.pricingModel || 'per_shift_12h'}
+                      onChange={(e) => setFormData({ ...formData, pricingModel: e.target.value as PricingModel })}
+                      className="form-input"
+                    >
+                      <option value="per_shift_12h">12-Hour Shift</option>
+                      <option value="per_shift_24h">24-Hour Shift</option>
+                      <option value="hourly">Hourly / Visit</option>
+                      <option value="daily">Daily</option>
+                      <option value="monthly">Monthly Package</option>
+                      <option value="custom">Custom Assessment</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label">12-Hour Shift Price (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.price12h || formData.basePrice || 0}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setFormData({ ...formData, price12h: val, basePrice: val });
+                      }}
+                      className="form-input"
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">24-Hour Shift Price (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.price24h || 0}
+                      onChange={(e) => setFormData({ ...formData, price24h: Number(e.target.value) })}
+                      className="form-input"
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Minimum Duration</label>
+                    <input
+                      type="text"
+                      value={formData.minimumDuration || ''}
+                      onChange={(e) => setFormData({ ...formData, minimumDuration: e.target.value })}
+                      className="form-input"
+                      placeholder="e.g. 3 Days"
+                    />
+                  </div>
+                </div>
+
+                {/* Inclusions */}
                 <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">URL Slug *</label>
-                  <input
-                    type="text"
-                    value={formData.slug || ''}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs font-mono"
+                  <label className="form-label">What's Included (one per line)</label>
+                  <textarea
+                    rows={3}
+                    value={formData.whatIncluded?.join('\n') || ''}
+                    onChange={(e) => setFormData({ ...formData, whatIncluded: e.target.value.split('\n').filter((l) => l.trim()) })}
+                    className="form-input resize-none"
+                    placeholder="Vital signs documentation&#10;Medication administration&#10;Wound care"
                   />
                 </div>
-              </div>
 
-              {/* Short Description */}
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">Short Description *</label>
-                <textarea
-                  rows={2}
-                  value={formData.shortDescription || ''}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
-                />
-              </div>
-
-              {/* Pricing Model & Base Price */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Exclusions */}
                 <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Pricing Model</label>
-                  <select
-                    value={formData.pricingModel || 'per_shift_12h'}
-                    onChange={(e) => setFormData({ ...formData, pricingModel: e.target.value as PricingModel })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs font-medium"
-                  >
-                    <option value="per_shift_12h">12-Hour Shift</option>
-                    <option value="per_shift_24h">24-Hour Shift</option>
-                    <option value="hourly">Hourly / Visit</option>
-                    <option value="daily">Daily</option>
-                    <option value="monthly">Monthly Package</option>
-                    <option value="custom">Custom Assessment</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Base Price (INR)</label>
-                  <input
-                    type="number"
-                    value={formData.basePrice || 0}
-                    onChange={(e) => setFormData({ ...formData, basePrice: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
+                  <label className="form-label">What's NOT Included (one per line)</label>
+                  <textarea
+                    rows={2}
+                    value={formData.whatNotIncluded?.join('\n') || ''}
+                    onChange={(e) => setFormData({ ...formData, whatNotIncluded: e.target.value.split('\n').filter((l) => l.trim()) })}
+                    className="form-input resize-none"
+                    placeholder="Emergency resuscitation&#10;Medicine supply"
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Minimum Duration</label>
-                  <input
-                    type="text"
-                    value={formData.minimumDuration || ''}
-                    onChange={(e) => setFormData({ ...formData, minimumDuration: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
-                  />
+                {/* Policies */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="form-label">Additional Charges Disclaimer</label>
+                    <input
+                      type="text"
+                      value={formData.additionalChargesNotice || ''}
+                      onChange={(e) => setFormData({ ...formData, additionalChargesNotice: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Cancellation Policy</label>
+                    <input
+                      type="text"
+                      value={formData.cancellationPolicy || ''}
+                      onChange={(e) => setFormData({ ...formData, cancellationPolicy: e.target.value })}
+                      className="form-input"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Inclusions (newline separated) */}
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">
-                  What Service May Include (One item per line)
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.whatIncluded?.join('\n') || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      whatIncluded: e.target.value.split('\n').filter((l) => l.trim()),
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
-                />
-              </div>
-
-              {/* Exclusions (newline separated) */}
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">
-                  What Is NOT Included (One item per line)
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.whatNotIncluded?.join('\n') || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      whatNotIncluded: e.target.value.split('\n').filter((l) => l.trim()),
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
-                />
-              </div>
-
-              {/* Additional charges & cancellation policy */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">
-                    Additional Charges Disclaimer
+                {/* Publish Toggle */}
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isPublished ?? true}
+                      onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600" />
                   </label>
-                  <input
-                    type="text"
-                    value={formData.additionalChargesNotice || ''}
-                    onChange={(e) => setFormData({ ...formData, additionalChargesNotice: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Cancellation Policy</label>
-                  <input
-                    type="text"
-                    value={formData.cancellationPolicy || ''}
-                    onChange={(e) => setFormData({ ...formData, cancellationPolicy: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white text-xs"
-                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Publish to Customer Catalog</p>
+                    <p className="text-[10px] text-slate-500">When enabled, this service appears live on the website</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Publish Toggle */}
-              <div className="pt-2 flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="pubToggle"
-                  checked={formData.isPublished ?? true}
-                  onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                  className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
-                />
-                <label htmlFor="pubToggle" className="font-bold text-slate-800 text-xs cursor-pointer">
-                  Publish to Customer Discovery Catalog (Active online)
-                </label>
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="pt-4 border-t border-slate-200 flex justify-end gap-2">
+              {/* Footer */}
+              <div className="p-5 border-t border-slate-100 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingService(null);
-                    setIsCreatingNew(false);
-                  }}
-                  className="px-4 py-2 font-bold text-slate-600 hover:text-slate-900"
+                  onClick={() => { setEditingService(null); setIsCreatingNew(false); }}
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm"
+                  className={`btn-primary ${saved ? 'opacity-80' : ''}`}
+                  disabled={saved}
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Save Configuration</span>
+                  {saved ? (
+                    <><span className="animate-pulse">✓</span> Saved!</>
+                  ) : (
+                    <><Save className="w-4 h-4" /> Save Configuration</>
+                  )}
                 </button>
               </div>
             </form>

@@ -23,6 +23,8 @@ export interface ServiceItem {
   minimumDuration: string;
   pricingModel: PricingModel;
   basePrice: number;
+  price12h?: number;
+  price24h?: number;
   additionalChargesNotice: string;
   requiredInformation: string[];
   faqs: ServiceFAQ[];
@@ -110,6 +112,7 @@ export interface BookingRequest {
     preferredDate: string;
     preferredStartTime: string;
     preferredDuration: string;
+    shiftType?: string;
     recurringType: 'one-time' | 'daily' | 'weekly' | 'monthly' | 'custom';
     recurringDays?: string[];
     recurringDuration?: string;
@@ -222,4 +225,15 @@ export interface NotificationItem {
   timestamp: string;
   read: boolean;
   channel: 'SMS' | 'WhatsApp' | 'Email' | 'In-App';
+}
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: 'customer' | 'admin' | 'staff';
+  avatarUrl?: string;
+  provider?: string;
+  createdAt?: string;
 }

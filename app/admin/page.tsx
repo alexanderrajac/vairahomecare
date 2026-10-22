@@ -11,245 +11,321 @@ import {
   TrendingUp,
   Settings,
   UserCheck,
-  ShieldCheck,
   Phone,
   MessageSquare,
   ArrowRight,
   Bell,
   Activity,
-  FileSpreadsheet,
+  DollarSign,
+  XCircle,
+  RefreshCw,
+  Sparkles,
+  ChevronRight,
+  Circle,
 } from 'lucide-react';
 import { useVairaStore } from '@/lib/store';
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    REQUEST_RECEIVED: 'badge badge-pending',
+    UNDER_REVIEW:     'badge badge-review',
+    CONTACTED:        'badge badge-contacted',
+    CONFIRMED:        'badge badge-confirmed',
+    IN_PROGRESS:      'badge badge-active',
+    COMPLETED:        'badge badge-completed',
+    CANCELLED:        'badge badge-cancelled',
+  };
+  return (
+    <span className={map[status] || 'badge badge-pending'}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  );
+}
 
 export default function AdminDashboardPage() {
   const { bookings, services, staff, notifications, isHydrated } = useVairaStore();
 
   if (!isHydrated) {
     return (
-      <div className="py-20 text-center text-sm text-slate-500">
-        Loading Admin Operations Center...
+      <div className="flex items-center justify-center py-24 text-slate-400 gap-3">
+        <RefreshCw className="w-5 h-5 animate-spin" />
+        <span className="text-sm font-medium">Loading Operations Center...</span>
       </div>
     );
   }
 
-  const totalRequests = bookings.length;
-  const pendingReview = bookings.filter((b) => b.status === 'REQUEST_RECEIVED' || b.status === 'UNDER_REVIEW').length;
-  const confirmed = bookings.filter((b) => b.status === 'CONFIRMED').length;
-  const inProgress = bookings.filter((b) => b.status === 'IN_PROGRESS').length;
-  const completed = bookings.filter((b) => b.status === 'COMPLETED').length;
+  const totalRequests  = bookings.length;
+  const pendingReview  = bookings.filter((b) => b.status === 'REQUEST_RECEIVED' || b.status === 'UNDER_REVIEW').length;
+  const confirmed      = bookings.filter((b) => b.status === 'CONFIRMED').length;
+  const inProgress     = bookings.filter((b) => b.status === 'IN_PROGRESS').length;
+  const completed      = bookings.filter((b) => b.status === 'COMPLETED').length;
+  const cancelled      = bookings.filter((b) => b.status === 'CANCELLED').length;
+  const availableStaff = staff.filter((s) => s.status === 'AVAILABLE').length;
 
   const totalEstimatedRevenue = bookings
     .filter((b) => b.status !== 'CANCELLED')
     .reduce((sum, b) => sum + (b.priceEstimate.estimatedTotal || 0), 0);
 
-  const availableStaff = staff.filter((s) => s.status === 'AVAILABLE').length;
+  const recentBookings = [...bookings].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  ).slice(0, 6);
+
+  const kpiCards = [
+    {
+      label: 'Total Leads',
+      value: totalRequests,
+      sub: 'All-time bookings',
+      color: 'kpi-card',
+      icon: <CalendarCheck className="w-5 h-5 text-emerald-600" />,
+      bg: 'bg-emerald-50',
+    },
+    {
+      label: 'Need Action',
+      value: pendingReview,
+      sub: 'Awaiting review',
+      color: 'kpi-card kpi-warning',
+      icon: <AlertCircle className="w-5 h-5 text-amber-500" />,
+      bg: 'bg-amber-50',
+    },
+    {
+      label: 'Confirmed',
+      value: confirmed,
+      sub: 'Staff allocated',
+      color: 'kpi-card kpi-success',
+      icon: <CheckCircle className="w-5 h-5 text-emerald-600" />,
+      bg: 'bg-emerald-50',
+    },
+    {
+      label: 'Active Care',
+      value: inProgress,
+      sub: 'At patient homes',
+      color: 'kpi-card kpi-info',
+      icon: <Activity className="w-5 h-5 text-blue-500" />,
+      bg: 'bg-blue-50',
+    },
+    {
+      label: 'Completed',
+      value: completed,
+      sub: 'Fulfilled services',
+      color: 'kpi-card kpi-purple',
+      icon: <Sparkles className="w-5 h-5 text-violet-500" />,
+      bg: 'bg-violet-50',
+    },
+    {
+      label: 'Pipeline Value',
+      value: `₹${(totalEstimatedRevenue / 1000).toFixed(1)}K`,
+      sub: 'Estimated revenue',
+      color: 'kpi-card',
+      icon: <DollarSign className="w-5 h-5 text-teal-600" />,
+      bg: 'bg-teal-50',
+    },
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Top Welcome & Navigation Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+    <div className="space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="bg-slate-900 text-white text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full">
-              Coordinator Portal
-            </span>
-            <span className="text-xs font-bold text-emerald-700">Vaira Home Care Desk</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
-            Care Operations & CRM Dashboard
+          <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest mb-1">
+            Coordinator Portal
+          </p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Care Operations Dashboard
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Real-time tracking of patient care requests, staff matching, and coordination pipelines.
+          <p className="text-sm text-slate-500 mt-0.5">
+            Real-time tracking of patient care requests and staff coordination.
           </p>
         </div>
-
-        {/* Quick Admin Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/admin/requests"
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all"
-          >
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link href="/admin/requests" className="btn-primary">
             <CalendarCheck className="w-4 h-4" />
-            <span>Manage All Requests</span>
+            Manage Requests
           </Link>
-
-          <Link
-            href="/admin/services"
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            <span>Service Catalog Config</span>
-          </Link>
-
-          <Link
-            href="/admin/analytics"
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors"
-          >
+          <Link href="/admin/analytics" className="btn-secondary">
             <TrendingUp className="w-4 h-4" />
-            <span>Lead & Funnel Analytics</span>
+            Analytics
           </Link>
         </div>
       </div>
 
-      {/* KPI Metrics Cards */}
+      {/* KPI Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Leads</span>
-          <div className="text-2xl font-black text-slate-900">{totalRequests}</div>
-          <span className="text-[11px] text-slate-500">All-time bookings</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/40 shadow-sm space-y-1">
-          <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Need Review</span>
-          <div className="text-2xl font-black text-amber-900">{pendingReview}</div>
-          <span className="text-[11px] text-amber-700">Immediate attention</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 shadow-sm space-y-1">
-          <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Confirmed</span>
-          <div className="text-2xl font-black text-emerald-900">{confirmed}</div>
-          <span className="text-[11px] text-emerald-700">Staff allocated</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-blue-200 bg-blue-50/40 shadow-sm space-y-1">
-          <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">Active Care</span>
-          <div className="text-2xl font-black text-blue-900">{inProgress}</div>
-          <span className="text-[11px] text-blue-700">At residence</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Completed</span>
-          <div className="text-2xl font-black text-slate-800">{completed}</div>
-          <span className="text-[11px] text-slate-500">Fulfillments</span>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Staff</span>
-          <div className="text-2xl font-black text-emerald-700">{availableStaff} / {staff.length}</div>
-          <span className="text-[11px] text-slate-500">Ready for shifts</span>
-        </div>
+        {kpiCards.map((card, i) => (
+          <div key={i} className={`${card.color} animate-slide-up delay-${(i + 1) * 100}`}>
+            <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center mb-3`}>
+              {card.icon}
+            </div>
+            <div className="stat-number text-2xl text-slate-900 mb-0.5">{card.value}</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{card.label}</div>
+            <div className="text-[11px] text-slate-500 mt-0.5">{card.sub}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Main Grid: Recent Requests & Live Operations Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Recent Service Requests CRM Preview */}
-        <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Recent Requests CRM */}
+        <div className="lg:col-span-8 section-card animate-slide-up delay-200">
+          <div className="section-card-header">
             <div>
-              <h2 className="font-bold text-slate-900 text-lg">Recent Coordination Queue</h2>
-              <p className="text-xs text-slate-500">Action items awaiting review or confirmation</p>
+              <h2 className="font-bold text-slate-900 text-base">Recent Coordination Queue</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Latest service requests requiring action</p>
             </div>
-            <Link
-              href="/admin/requests"
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
-            >
-              <span>View Full CRM Table</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+            <Link href="/admin/requests" className="flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors">
+              View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="space-y-3">
-            {bookings.slice(0, 5).map((b) => (
+          <div className="divide-y divide-slate-50">
+            {recentBookings.map((b) => (
               <div
                 key={b.id}
-                className="p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 transition-all bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors"
               >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-slate-900">{b.id}</span>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                        b.status === 'CONFIRMED'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : b.status === 'IN_PROGRESS'
-                          ? 'bg-blue-100 text-blue-800'
-                          : b.status === 'CANCELLED'
-                          ? 'bg-rose-100 text-rose-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      {b.status.replace(/_/g, ' ')}
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
+                      {b.id}
                     </span>
-                    <span className="text-slate-400">Via {b.leadSource}</span>
+                    <StatusBadge status={b.status} />
+                    <span className="text-[10px] text-slate-400 font-medium">via {b.leadSource}</span>
                   </div>
-                  <p className="font-bold text-slate-800 text-sm">{b.customer.fullName} • {b.serviceName}</p>
-                  <p className="text-slate-500">
-                    {b.location.area} • Start: {b.schedule.preferredDate} ({b.schedule.preferredStartTime})
+                  <p className="font-bold text-slate-900 text-sm truncate">{b.customer.fullName}
+                    <span className="font-normal text-slate-500"> · {b.serviceName}</span>
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {b.location.area} · {b.schedule.preferredDate} @ {b.schedule.preferredStartTime}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   <a
                     href={`tel:${b.customer.phoneNumber}`}
-                    className="p-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-xl"
-                    title="Call Customer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 transition-colors"
+                    title="Call"
                   >
-                    <Phone className="w-4 h-4 text-emerald-600" />
+                    <Phone className="w-3.5 h-3.5" />
                   </a>
                   <a
                     href={`https://wa.me/${b.customer.whatsappNumber || b.customer.phoneNumber.replace(/\s+/g, '')}?text=${encodeURIComponent(`Hello ${b.customer.fullName}, contacting from Vaira Home Care regarding request ${b.id}.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-xl"
-                    title="WhatsApp Customer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors"
+                    title="WhatsApp"
                   >
-                    <MessageSquare className="w-4 h-4 text-emerald-700" />
+                    <MessageSquare className="w-3.5 h-3.5" />
                   </a>
                   <Link
                     href={`/admin/requests?highlight=${b.id}`}
-                    className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs"
+                    className="btn-navy text-[11px] px-3 py-1.5"
                   >
                     Manage
                   </Link>
                 </div>
               </div>
             ))}
+
+            {recentBookings.length === 0 && (
+              <div className="px-5 py-12 text-center text-slate-400 text-sm">
+                No booking requests yet.
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Live Notification & Communication Stream (Section 13) */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                <Bell className="w-4 h-4 text-emerald-600" />
-                <span>System Notifications</span>
+        {/* Right Panel */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Staff Roster */}
+          <div className="section-card animate-slide-up delay-300">
+            <div className="section-card-header">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-emerald-600" />
+                Caregiver Roster
               </h3>
-              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                Live Audit
+              <span className={`badge ${availableStaff > 0 ? 'badge-confirmed' : 'badge-cancelled'}`}>
+                {availableStaff} Ready
               </span>
             </div>
-
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 text-xs">
-              {notifications.map((n) => (
-                <div key={n.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">{n.title}</span>
-                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                      {n.channel}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed">{n.message}</p>
-                  <span className="text-[10px] text-slate-400 block">
-                    {new Date(n.timestamp).toLocaleTimeString()}
-                  </span>
+            <div className="p-5 space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-600 font-medium">Available Now</span>
+                <span className="font-extrabold text-slate-900">{availableStaff} / {staff.length}</span>
+              </div>
+              <div className="progress-bar-track">
+                <div
+                  className="progress-bar-fill bg-gradient-to-r from-emerald-500 to-teal-500"
+                  style={{ width: staff.length > 0 ? `${(availableStaff / staff.length) * 100}%` : '0%' }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <div className="text-lg font-extrabold text-slate-900">{staff.length}</div>
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide mt-0.5">Total Staff</div>
                 </div>
-              ))}
+                <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                  <div className="text-lg font-extrabold text-emerald-700">{availableStaff}</div>
+                  <div className="text-[10px] text-emerald-700 font-semibold uppercase tracking-wide mt-0.5">On Duty</div>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Serving Kanchipuram, Vembedu &amp; surrounding districts. All staff physician-prescription compliant.
+              </p>
             </div>
           </div>
 
-          {/* Quick Staff Roster Summary */}
-          <div className="bg-gradient-to-br from-slate-900 to-emerald-950 rounded-3xl p-6 text-white shadow-md space-y-3 text-xs">
-            <h3 className="font-bold text-base flex items-center gap-2 text-white">
-              <UserCheck className="w-4 h-4 text-emerald-400" />
-              <span>Caregiver Roster Snapshot</span>
-            </h3>
-            <p className="text-slate-300 leading-relaxed">
-              <strong>{availableStaff}</strong> of <strong>{staff.length}</strong> staff currently ready for duty in Kanchipuram and Vembedu.
-            </p>
-            <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-emerald-300">
-              <span>Doctor prescription adherence: 100%</span>
-              <span className="font-bold">Compliant</span>
+          {/* Notifications */}
+          <div className="section-card animate-slide-up delay-400">
+            <div className="section-card-header">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <Bell className="w-4 h-4 text-emerald-600" />
+                System Notifications
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <span className="dot-live"><span /><span /></span>
+                <span className="text-[10px] font-bold text-emerald-600">Live</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-2 max-h-64 overflow-y-auto no-scrollbar">
+              {notifications.slice(0, 6).map((n) => (
+                <div key={n.id} className="notif-item space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">{n.title}</span>
+                    <span className="badge badge-confirmed text-[9px]">{n.channel}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">{n.message}</p>
+                  <span className="text-[10px] text-slate-400">{new Date(n.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              ))}
+              {notifications.length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-6">No notifications yet.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Stats Summary */}
+          <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-5 text-white border border-white/5 animate-slide-up delay-500">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-bold">Today's Snapshot</span>
+            </div>
+            <div className="space-y-2.5">
+              {[
+                { label: 'Pending Action', val: pendingReview, color: 'text-amber-400' },
+                { label: 'In Active Care', val: inProgress, color: 'text-blue-400' },
+                { label: 'Completed Today', val: completed, color: 'text-emerald-400' },
+                { label: 'Cancelled', val: cancelled, color: 'text-rose-400' },
+              ].map((item) => (
+                <div key={item.label} className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400">{item.label}</span>
+                  <span className={`font-extrabold ${item.color}`}>{item.val}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400">Est. Pipeline Revenue</span>
+                <span className="font-extrabold text-emerald-400">₹{totalEstimatedRevenue.toLocaleString('en-IN')}</span>
+              </div>
             </div>
           </div>
         </div>

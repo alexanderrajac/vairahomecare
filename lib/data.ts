@@ -4,573 +4,443 @@ import {
   BookingRequest,
   BusinessSettings,
   CustomerReview,
-} from './types';
+} from "./types";
 
 export const initialBusinessSettings: BusinessSettings = {
-  name: 'Vaira Home Care Service',
-  phone1: '+91 87545 19060',
-  phone2: '+91 87545 19060',
-  whatsapp: '918754519060',
-  email: 'care@vairahomecare.com',
-  address: 'No. 14, Gandhi Road, Near Bus Terminus, Vembedu & Kanchipuram, Tamil Nadu 631502',
-  serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur', 'Chengalpattu'],
-  operatingHours: '24 Hours Caregiver Coordination / Desk: 7:00 AM - 10:00 PM',
+  name: "Vaira Home Care Service",
+  phone1: "+91 87545 19060",
+  phone2: "+91 98765 43210",
+  whatsapp: "918754519060",
+  email: "care@vairahomecare.com",
+  address: "No. 14, Gandhi Road, Near Bus Terminus, Vembedu & Kanchipuram, Tamil Nadu 631502",
+  serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur", "Chengalpattu"],
+  operatingHours: "24 Hours Ambulance & Caregiver Coordination / Desk: 7:00 AM - 10:00 PM",
   experienceYears: 9,
   verifiedStaffCount: 48,
   emergencyDisclaimer:
-    'Vaira Home Care Service provides supportive home nursing, elder care, and bedside caregiver assistance under physician prescription. We do not provide acute hospital emergency medical treatment. In life-threatening medical emergencies, please immediately dial 108 or proceed to the nearest hospital emergency department.',
+    "Vaira Home Care Service provides supportive home nursing, elder care, and bedside caregiver assistance under physician prescription. We do not provide acute hospital emergency medical treatment. In life-threatening medical emergencies, please immediately dial 108 or proceed to the nearest hospital emergency department.",
 };
 
 export const initialServices: ServiceItem[] = [
   {
-    id: 'srv-01',
-    slug: '24-hour-home-nursing',
-    name: '24-Hour Home Nursing',
-    category: 'nursing',
+    id: "srv-01",
+    slug: "home-nursing-care",
+    name: "Home Nursing Care",
+    category: "nursing",
     shortDescription:
-      'Continuous round-the-clock bedside nursing by qualified nurses for critically dependent, bed-bound, or postoperative patients.',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80',
+      "Professional clinical bedside nursing care, vitals charting, doctor-prescribed medication administration, and injection support at home.",
+    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80",
     whoThisIsFor: [
-      'Patients requiring continuous vital signs monitoring following hospital discharge',
-      'Bed-ridden individuals needing structured bedside clinical hygiene and medication administration',
-      'Post-surgical patients with wound drains, IV lines, or specialized medical regimens',
-      'Families seeking overnight peace of mind with vetted nursing supervision',
+      "Patients requiring vital signs monitoring (BP, Pulse, SpO2, Blood Sugar)",
+      "Individuals needing doctor-prescribed IM/IV injections or medication administration",
+      "Patients recovering from illnesses needing structured nursing routines",
+      "Families needing compassionate clinical care for elderly or recovering relatives",
     ],
     whatIncluded: [
-      'Continuous vital signs documentation (BP, Pulse, SpO2, Blood Sugar as prescribed)',
-      'Administration of doctor-prescribed oral, IV, or IM medications',
-      'Bed-sore prevention protocols, frequent position turning, and skin integrity checks',
-      'Catheter, Ryle’s tube, or stoma routine maintenance per physician protocol',
-      'Daily progress log and structured communication with attending family members',
+      "Regular vital signs documentation & clinical charting",
+      "Administration of prescribed oral, IV, or IM medications",
+      "Nebulization, oxygen therapy monitoring, and diabetic sugar testing",
+      "Bedside clinical hygiene, skin integrity maintenance, and infection prevention",
+      "Prompt family communication and adherence to physician discharge instructions",
     ],
     whatNotIncluded: [
-      'Emergency medical resuscitation or ICU-level ventilation',
-      'Independent doctor diagnosis or medicine prescription (only physician-ordered medicines given)',
-      'Supply of pharmaceuticals, disposable surgical kits, or hospital beds',
-      'Inpatient hospital admissions or acute ambulance transport',
-      'Services outside the agreed scope of home nursing care',
+      "Independent doctor diagnosis or prescribing unapproved medicines",
+      "Acute emergency resuscitation (call 108 for life emergencies)",
+      "Supply of pharmaceutical medicines and disposables (family provides)",
+      "Domestic housework outside patient care",
     ],
-    availabilityHours: '24 Hours (Rotating 12h shifts or 24h stay-in)',
-    availableDays: 'All 7 Days (Monday to Sunday)',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur', 'Chengalpattu'],
-    minimumDuration: '3 Days minimum commitment',
-    pricingModel: 'per_shift_24h',
-    basePrice: 2200,
-    additionalChargesNotice:
-      'Travel allowance may apply for remote rural locations beyond primary town radius. Final service availability and charges will be confirmed by the Vaira Home Care team after reviewing your request.',
-    requiredInformation: [
-      'Attending hospital discharge summary or physician prescription',
-      'Current prescribed medication schedule and dietary guidelines',
-      'Exact residence address and primary family contact in charge',
-    ],
-    faqs: [
-      {
-        question: 'How do the 24-hour nursing shifts work?',
-        answer:
-          'Depending on family preference and patient comfort, we coordinate either a continuous stay-in nurse or two rotating 12-hour shifts (Day: 8 AM - 8 PM, Night: 8 PM - 8 AM) to ensure constant alertness.',
-      },
-      {
-        question: 'What qualifications do your home nurses hold?',
-        answer:
-          'Our nurses hold recognized GNM (General Nursing and Midwifery) or B.Sc Nursing credentials with verified bedside clinical experience.',
-      },
-      {
-        question: 'Can the nurse prescribe new medicines if symptoms change?',
-        answer:
-          'No. Our nurses strictly adhere to doctor orders. If any symptom changes or acute distress arises, the nurse contacts the family and advises immediate consultation with the treating doctor or calling 108.',
-      },
-    ],
-    cancellationPolicy:
-      'Advance notice of at least 24 hours is required for planned cancellations or schedule adjustments to allow staff reallocation.',
-    termsNotice:
-      'Service deployment requires signed consent and submission of recent physician documentation. Submitting this request does not guarantee immediate clinical confirmation.',
-    seoTitle: '24-Hour Home Nursing in Kanchipuram & Vembedu | Vaira Home Care',
-    seoDescription:
-      'Professional round-the-clock bedside home nursing care in Kanchipuram, Vembedu and surrounding Tamil Nadu areas. Vetted nurses for post-operative and elderly recovery.',
-    isPublished: true,
-  },
-  {
-    id: 'srv-02',
-    slug: 'senior-citizen-care',
-    name: 'Senior Citizen Care',
-    category: 'elderly',
-    shortDescription:
-      'Compassionate, dedicated daily living assistance, mobility support, medication reminders, and companionship for elders.',
-    image: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=900&q=80',
-    whoThisIsFor: [
-      'Elderly parents living independently while children work or reside abroad',
-      'Seniors with mild mobility issues needing gentle fall-prevention assistance',
-      'Elders needing polite reminders for meal times, hydration, and prescribed medicines',
-      'Seniors recovering from minor illness seeking respectful daily companionship',
-    ],
-    whatIncluded: [
-      'Assistance with personal grooming, sponge bath, dressing, and oral hygiene',
-      'Gentle mobility assistance, assisted walking, and wheelchair support',
-      'Timely reminders for doctor-prescribed medications and hydration',
-      'Warming and serving prescribed meals and special dietary care',
-      'Empathetic companionship, newspaper reading, and meaningful conversation in Tamil/English',
-    ],
-    whatNotIncluded: [
-      'Invasive medical treatments (handled only by licensed nurses)',
-      'Heavy domestic house cleaning, laundry of entire household, or cooking for visitors',
-      'Independent administration of unprescribed medication',
-      'Financial transactions or bank handling on behalf of the senior',
-    ],
-    availabilityHours: '12 Hours (Day/Night) or 24 Hours Stay-in',
-    availableDays: 'Monday to Sunday',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur'],
-    minimumDuration: '7 Days commitment',
-    pricingModel: 'per_shift_12h',
-    basePrice: 950,
-    additionalChargesNotice:
-      'Stay-in arrangements include caregiver food and rest accommodations. Final pricing confirmed upon assessment of mobility requirements.',
-    requiredInformation: [
-      'Senior age, weight, and general mobility status (independent/assisted/wheelchair)',
-      'Daily routine preferences and language preference (Tamil/English/Telugu)',
-      'Emergency contact numbers of family members',
-    ],
-    faqs: [
-      {
-        question: 'Do your caregivers speak Tamil?',
-        answer:
-          'Yes, our caregivers are locally based in Kanchipuram, Vembedu, and nearby districts and speak fluent Tamil.',
-      },
-      {
-        question: 'Can the caregiver help with light meal preparation?',
-        answer:
-          'Caregivers assist with warming pre-prepared food, preparing simple oats/porridge/tea for the senior, and feeding support.',
-      },
-    ],
-    cancellationPolicy:
-      '48-hour prior notification is required for discontinuing recurring care.',
-    termsNotice:
-      'Service agreement and home environment safety check required prior to start.',
-    seoTitle: 'Senior Citizen Care Services in Kanchipuram | Vaira Home Care',
-    seoDescription:
-      'Dedicated elder care, bedside assistance, and companionship for senior citizens in Kanchipuram and Vembedu by verified, compassionate caregivers.',
-    isPublished: true,
-  },
-  {
-    id: 'srv-03',
-    slug: 'patient-care',
-    name: 'Patient Care Service',
-    category: 'attender',
-    shortDescription:
-      'Trained hospital-to-home patient attenders for hygiene support, feeding, bed transfers, and routine non-invasive comfort.',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=900&q=80',
-    whoThisIsFor: [
-      'Patients recently discharged from hospital needing temporary recovery assistance',
-      'Patients with fractures or orthopedic cast restricting self-movement',
-      'Individuals requiring assistance with bedpan, urinal, and personal hygiene',
-      'Families needing support during work hours to care for a sick relative',
-    ],
-    whatIncluded: [
-      'Bed-bath, sponge bath, hair combing, and oral hygiene',
-      'Assisted transfer from bed to wheelchair or commode chair',
-      'Diaper change and skin sanitization to prevent rashes',
-      'Feeding assistance with prescribed soft/liquid diet',
-      'Periodic change of posture to avoid pressure soreness',
-    ],
-    whatNotIncluded: [
-      'Invasive procedures such as IV drip insertion or arterial cannulation',
-      'Clinical diagnostic tests or interpreting laboratory reports',
-      'Prescription or purchase of pharmaceutical supplies',
-    ],
-    availabilityHours: '8 Hours, 12 Hours, or 24 Hours',
-    availableDays: 'Daily',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Chengalpattu'],
-    minimumDuration: '3 Days',
-    pricingModel: 'per_shift_12h',
-    basePrice: 900,
-    additionalChargesNotice:
-      'Additional charges may apply for nighttime hours or holiday shifts as notified by coordinator.',
-    requiredInformation: [
-      'Current medical condition summary from treating hospital',
-      'Patient weight and level of bed mobility',
-      'Location and preferred shift duration',
-    ],
-    faqs: [
-      {
-        question: 'Is this service available on short notice?',
-        answer:
-          'We review requests within 2 to 4 business hours and coordinate attender deployment subject to staff availability.',
-      },
-    ],
-    cancellationPolicy:
-      '24-hour advance notice for reschedule or cancellation without fees.',
-    termsNotice:
-      'Non-clinical bedside support only. Clinical procedures require nursing service.',
-    seoTitle: 'Home Patient Attender Care in Kanchipuram & Vembedu',
-    seoDescription:
-      'Affordable bedside patient care and attender services for hospital recovery in Kanchipuram and surrounding areas.',
-    isPublished: true,
-  },
-  {
-    id: 'srv-04',
-    slug: 'post-operative-care',
-    name: 'Post-Operative Care',
-    category: 'nursing',
-    shortDescription:
-      'Structured clinical recovery care following major or minor surgeries under your surgeon’s guidelines.',
-    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=900&q=80',
-    whoThisIsFor: [
-      'Patients discharged following orthopedic surgery (knee/hip replacement)',
-      'Abdominal, cardiac, or general surgical recovery at home',
-      'Patients needing surgical site observation and drainage monitoring',
-      'Individuals requiring assisted mobilization as permitted by surgeon',
-    ],
-    whatIncluded: [
-      'Sterile surgical wound dressings under surgical protocol',
-      'Pain management medication administration per doctor’s prescription',
-      'Monitoring surgical drain output and vital parameters',
-      'Prevention of deep vein thrombosis through guided gentle movement',
-      'Coordination with family regarding surgeon follow-up milestones',
-    ],
-    whatNotIncluded: [
-      'Surgical suture removal without explicit doctor written authorization',
-      'Altering medication doses without consulting the operating surgeon',
-      'Emergency re-operation or acute bleeding interventions',
-    ],
-    availabilityHours: '12 Hours or 24 Hours Shift',
-    availableDays: 'All 7 Days',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Sriperumbudur', 'Chengalpattu'],
-    minimumDuration: '5 Days',
-    pricingModel: 'per_shift_12h',
-    basePrice: 1400,
-    additionalChargesNotice:
-      'Sterile dressing packs and antiseptics are provided by the patient/family or billed as consumable supplies at actual cost.',
-    requiredInformation: [
-      'Operation theatre summary and discharge protocol from surgeon',
-      'Prescribed wound dressing schedule and medications',
-    ],
-    faqs: [
-      {
-        question: 'Who provides post-operative care?',
-        answer:
-          'Only qualified Registered Nurses with aseptic surgical dressing training are assigned to post-operative cases.',
-      },
-    ],
-    cancellationPolicy:
-      '24-hour notice required for rescheduling visits.',
-    termsNotice:
-      'Surgeon discharge summary must be provided prior to first visit.',
-    seoTitle: 'Post-Operative Home Nursing Care in Kanchipuram & Vembedu',
-    seoDescription:
-      'Skilled post-surgical home nursing in Kanchipuram. Aseptic dressings, vitals monitoring, and recovery assistance under surgeon protocols.',
-    isPublished: true,
-  },
-  {
-    id: 'srv-05',
-    slug: 'surgical-dressing',
-    name: 'Surgical Dressing & Wound Care',
-    category: 'nursing',
-    shortDescription:
-      'Aseptic, sterile home visits for diabetic foot ulcers, post-surgical incisions, bed sores, and wound dressings.',
-    image: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=900&q=80',
-    whoThisIsFor: [
-      'Patients needing periodic sterile dressing for healing surgical incisions',
-      'Individuals managing Stage I or Stage II pressure sores (bed-sores)',
-      'Diabetic foot ulcer routine antiseptic cleaning and protective dressings',
-      'Patients unable to travel frequently to hospital outpatient clinics',
-    ],
-    whatIncluded: [
-      'Strict aseptic sterile field setup at home',
-      'Gentle cleaning with prescribed normal saline/antiseptic solutions',
-      'Application of doctor-prescribed ointments, collagen, or silver dressings',
-      'Assessment and photographic documentation of wound healing progression (with consent)',
-      'Advice on positioning to avoid pressure on healing tissue',
-    ],
-    whatNotIncluded: [
-      'Surgical debridement of necrotic deep tissue requiring operating theatre',
-      'Prescribing antibiotics or oral wound medications',
-      'Treating acute spreading cellulitis without doctor consultation',
-    ],
-    availabilityHours: 'Scheduled Visit (Morning or Evening)',
-    availableDays: 'Daily / Alternate Days as prescribed',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam'],
-    minimumDuration: 'Per-visit service',
-    pricingModel: 'hourly',
-    basePrice: 450,
-    additionalChargesNotice:
-      'Specialized dressing materials (hydrocolloid, foam, silver dressings) to be supplied by family or billed at pharmacy cost.',
-    requiredInformation: [
-      'Prescription specifying dressing protocol and topical ointments',
-      'Wound location and approximate size',
-    ],
-    faqs: [
-      {
-        question: 'Can the nurse visit once every two days?',
-        answer:
-          'Yes, we schedule visits strictly adhering to your doctor’s advised dressing frequency.',
-      },
-    ],
-    cancellationPolicy:
-      'Cancel up to 4 hours before scheduled home visit time.',
-    termsNotice:
-      'Single procedure visit. Does not include continuous stay.',
-    seoTitle: 'Home Wound Dressing & Bed Sore Care in Kanchipuram',
-    seoDescription:
-      'Sterile home surgical dressing and diabetic wound care by experienced nurses in Kanchipuram and Vembedu.',
-    isPublished: true,
-  },
-  {
-    id: 'srv-06',
-    slug: 'tracheostomy-care',
-    name: 'Tracheostomy Care at Home',
-    category: 'nursing',
-    shortDescription:
-      'Specialized clinical suctioning, stoma hygiene, tube care, and respiratory monitoring by ICU-trained nurses.',
-    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=900&q=80',
-    whoThisIsFor: [
-      'Patients discharged with temporary or permanent tracheostomy tubes',
-      'Individuals needing regular sterile airway suctioning to clear secretions',
-      'Patients requiring specialized stoma dressing and humidification monitoring',
-    ],
-    whatIncluded: [
-      'Sterile airway suctioning using correct pressure techniques',
-      'Tracheostomy site antiseptic cleaning, gauze change, and tie security check',
-      'Continuous oxygen saturation (SpO2) and respiratory pattern checks',
-      'Nebulization and chest physiotherapy support as prescribed by pulmonologist',
-      'Immediate alert to family upon changes in secretion color, odor, or distress',
-    ],
-    whatNotIncluded: [
-      'Emergency mechanical ventilator programming without intensivist supervision',
-      'Emergency decannulation or re-insertion in acute respiratory arrest',
-      'Supply of oxygen cylinders or suction machine hardware (rental can be guided)',
-    ],
-    availabilityHours: '12h Shift or 24h Stay-in',
-    availableDays: 'All 7 Days',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur'],
-    minimumDuration: '7 Days',
-    pricingModel: 'per_shift_12h',
-    basePrice: 1800,
-    additionalChargesNotice:
-      'Requires operational suction machine and backup power at patient home.',
-    requiredInformation: [
-      'Pulmonologist/ENT discharge summary with tracheostomy tube size and type',
-      'Prescribed suctioning frequency and nebulization schedule',
-    ],
-    faqs: [
-      {
-        question: 'Do your nurses have ICU/Tracheostomy experience?',
-        answer:
-          'Yes, only nurses with verified respiratory and suctioning clinical experience are assigned.',
-      },
-    ],
-    cancellationPolicy:
-      '48-hour advance notice for recurring tracheostomy nursing cancellations.',
-    termsNotice:
-      'Family must ensure electricity backup for medical suction devices at home.',
-    seoTitle: 'Tracheostomy Home Nursing Care in Kanchipuram & Vembedu',
-    seoDescription:
-      'Professional tracheostomy tube care, sterile suctioning, and airway monitoring at home by trained nurses in Kanchipuram.',
-    isPublished: true,
-  },
-  {
-    id: 'srv-07',
-    slug: 'stroke-patient-care',
-    name: 'Stroke Patient Care',
-    category: 'specialized',
-    shortDescription:
-      'Long-term holistic supportive care, gentle passive movements, speech support, and safe swallowing assistance for stroke survivors.',
-    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=900&q=80',
-    whoThisIsFor: [
-      'Stroke survivors with hemiplegia or hemiparesis recovering at home',
-      'Patients with dysphagia (swallowing difficulty) requiring careful feeding routines',
-      'Elders needing gentle assisted mobilization to prevent joint contractures',
-    ],
-    whatIncluded: [
-      'Assistance with prescribed passive limb exercises and joint range of motion',
-      'Careful semi-upright feeding assistance to prevent aspiration',
-      'Skin care, positioning every two hours, and pressure-point relief',
-      'Patience with speech rehabilitation exercises recommended by therapist',
-      'Emotional reassurance and dignified assistance with all daily tasks',
-    ],
-    whatNotIncluded: [
-      'Acute thrombolytic treatment or stroke intervention',
-      'Independent neuro-physiotherapy diagnosis (follows neuro-therapist chart)',
-    ],
-    availabilityHours: '12 Hours or 24 Hours Stay-in',
-    availableDays: 'Daily',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Sriperumbudur', 'Chengalpattu'],
-    minimumDuration: '14 Days',
-    pricingModel: 'per_shift_12h',
+    availabilityHours: "12-Hour Shift (Day/Night) or 24-Hour Stay-in",
+    availableDays: "All 7 Days (Monday to Sunday)",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur", "Chengalpattu"],
+    minimumDuration: "1 Day commitment",
+    pricingModel: "per_shift_12h",
     basePrice: 1200,
+    price12h: 1200,
+    price24h: 1400,
     additionalChargesNotice:
-      'Monthly package rates available upon coordinator assessment.',
+      "Flat rates: ₹1,200 for 12 Hours | ₹1,400 for 24 Hours. Transparent pricing across Kanchipuram and Vembedu areas.",
     requiredInformation: [
-      'Neurologist discharge summary and current rehabilitation goals',
-      'Patient feeding status (oral / pureed / Ryle’s tube)',
+      "Patient diagnosis or hospital discharge summary",
+      "Prescribed medication sheet & doctor instructions",
+      "Residence address and family contact numbers",
     ],
     faqs: [
       {
-        question: 'Can the caregiver assist with physical exercises?',
+        question: "What are the shift timings for 12h vs 24h nursing?",
         answer:
-          'Our caregivers assist with repetitive doctor-approved range of motion exercises and walking assistance.',
+          "12-Hour shifts run either Day (8:00 AM - 8:00 PM) or Night (8:00 PM - 8:00 AM). 24-Hour care provides continuous round-the-clock stay-in bedside nursing.",
+      },
+      {
+        question: "What are the exact fees?",
+        answer:
+          "Home Nursing Care is fixed at ₹1,200 for 12-hour shifts and ₹1,400 for 24-hour continuous care.",
+      },
+      {
+        question: "Are your nurses qualified?",
+        answer:
+          "Yes, our home nursing staff have verified clinical credentials (GNM / B.Sc Nursing / Certified Home Health Aide) with hospital background.",
       },
     ],
-    cancellationPolicy:
-      '48-hour advance notice required.',
-    termsNotice:
-      'Long-term rehabilitative care. Clinical procedures managed by visiting nurse.',
-    seoTitle: 'Stroke Patient Rehabilitation & Home Care in Kanchipuram',
+    cancellationPolicy: "Please give 24-hour advance notice for reschedule or cancellation.",
+    termsNotice: "Clinical procedures strictly follow doctor written orders.",
+    seoTitle: "Home Nursing Care in Kanchipuram & Vembedu | Vaira Home Care",
     seoDescription:
-      'Compassionate home care for stroke survivors in Kanchipuram, Vembedu. Safe feeding, mobility assistance, and bedside support.',
+      "Reliable home nursing care in Kanchipuram and Vembedu. ₹1,200 for 12 Hours, ₹1,400 for 24 Hours. Qualified nurses for bedside recovery.",
     isPublished: true,
   },
   {
-    id: 'srv-08',
-    slug: 'paralysis-care',
-    name: 'Paralysis & Bedridden Care',
-    category: 'specialized',
+    id: "srv-02",
+    slug: "patient-care",
+    name: "Patient Care",
+    category: "attender",
     shortDescription:
-      'Comprehensive, dignified bedside support for paraplegic, quadriplegic, or immobility conditions.',
-    image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=900&q=80',
+      "Dedicated bedside patient attender for daily living hygiene, assisted mobility, feeding support, and non-invasive patient comfort.",
+    image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=900&q=80",
     whoThisIsFor: [
-      'Patients with spinal cord trauma or neurological mobility loss',
-      'Bedridden chronic patients needing round-the-clock comfort and hygiene',
-      'Families seeking trained attender support for turning and transfers',
+      "Patients recovering from minor illness or surgery needing personal assistance",
+      "Individuals with fractures or temporary mobility restrictions",
+      "Patients needing assistance with bedpan, diaper change, and hygiene",
+      "Busy family members needing trustworthy bedside support during work hours",
     ],
     whatIncluded: [
-      'Scheduled two-hourly body turning to prevent bedsores',
-      'Full bed sponge bath, hair washing with dry shampoo/rinse, and nail care',
-      'External catheter care and hygiene maintenance',
-      'Air mattress pressure maintenance and skin barrier cream application',
-      'Respectful, continuous attention and family communication',
+      "Bed-bath, sponge bath, grooming, and clothing change",
+      "Assisted transfer from bed to wheelchair or commode",
+      "Prompt diaper change, skin cleaning, and rash prevention",
+      "Feeding support with soft/liquid diet and timely hydration",
+      "Gentle physical support and respectful bedside companionship",
     ],
     whatNotIncluded: [
-      'Invasive medical treatments without nursing orders',
-      'Curative guarantees (care is supportive and palliative)',
+      "Invasive clinical injections or catheter insertions (requires nursing)",
+      "Medical diagnostics or treatment changes",
+      "Household domestic cleaning or laundry for others",
     ],
-    availabilityHours: '12 Hours or 24 Hours Stay-in',
-    availableDays: 'Monday through Sunday',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur'],
-    minimumDuration: '15 Days',
-    pricingModel: 'per_shift_24h',
-    basePrice: 1600,
+    availabilityHours: "12-Hour Shift (Day/Night) or 24-Hour Stay-in",
+    availableDays: "Daily",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur", "Chengalpattu"],
+    minimumDuration: "1 Day commitment",
+    pricingModel: "per_shift_12h",
+    basePrice: 1100,
+    price12h: 1100,
+    price24h: 1300,
     additionalChargesNotice:
-      'Rates vary based on patient weight and requirement of single vs two-person transfers.',
+      "Flat rates: ₹1,100 for 12 Hours | ₹1,300 for 24 Hours bedside attender care.",
     requiredInformation: [
-      'Physician summary, level of mobility, and weight',
-      'Bed setup details (air bed / hospital cot / regular bed)',
+      "Patient condition & level of mobility (bed-bound or assisted walking)",
+      "Primary family contact and location",
     ],
     faqs: [
       {
-        question: 'Do you provide air beds on rent?',
+        question: "What is the cost of Patient Care attender?",
         answer:
-          'We can connect families with trusted medical equipment providers in Kanchipuram for air mattresses and hospital beds.',
+          "Patient Care attender service is ₹1,100 for a 12-hour shift and ₹1,300 for a 24-hour shift.",
+      },
+      {
+        question: "Can the attender stay 24 hours at home?",
+        answer:
+          "Yes, our 24-hour attenders stay with the patient continuously with basic food and rest accommodation provided by the family.",
       },
     ],
-    cancellationPolicy:
-      '48-hour prior notice for long-term contract adjustments.',
-    termsNotice:
-      'Adequate space and clean environment required for caregiver stay.',
-    seoTitle: 'Paralysis & Bedridden Patient Home Care Kanchipuram',
+    cancellationPolicy: "24-hour advance notice for cancellations.",
+    termsNotice: "Non-invasive bedside attender care. Medical procedures handled by nurses.",
+    seoTitle: "Bedside Patient Care in Kanchipuram & Vembedu | Vaira Home Care",
     seoDescription:
-      'Dignified, round-the-clock care for paralyzed and bedridden patients in Kanchipuram and Vembedu. Bed sore prevention, hygiene, and full attender support.',
+      "Experienced patient attender care in Kanchipuram. ₹1,100 for 12 Hours, ₹1,300 for 24 Hours. Assistance with bathing, feeding, and transfers.",
     isPublished: true,
   },
   {
-    id: 'srv-09',
-    slug: 'caregiver-attender-service',
-    name: 'Caregiver / Hospital Attender Service',
-    category: 'attender',
+    id: "srv-03",
+    slug: "bedridden-patient-care",
+    name: "Bedridden Patient Care",
+    category: "specialized",
     shortDescription:
-      'Reliable, experienced attenders for bedside companionship and non-clinical assistance at home or hospital.',
-    image: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=900&q=80',
+      "Specialized care for completely bed-bound individuals, 2-hourly position turning, bedsore prevention, catheter maintenance, and total hygiene.",
+    image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=900&q=80",
     whoThisIsFor: [
-      'Families needing a reliable companion by a patient’s side at home',
-      'Hospital inpatient stay bedside assistance while family rests',
-      'Short-term illness recovery assistance',
+      "Paralyzed, stroke recovery, or comatose patients restricted to bed",
+      "Elderly individuals with severe frailty and zero mobility",
+      "Patients prone to painful pressure ulcers and bedsores",
+      "Patients requiring Ryle’s tube feeding and urinary catheter management",
     ],
     whatIncluded: [
-      'Assisting with walking, bathroom trips, and wheelchair mobility',
-      'Serving meals, water, and assisting with snacks',
-      'Calling duty nurses/doctors in hospital or family members at home',
-      'Keeping the bedside environment tidy, clean, and calm',
+      "Strict 2-hourly lateral position changing to eliminate pressure ulcers",
+      "Daily complete bed sponge baths, oral hygiene, and hair washing",
+      "Adult diaper changing, perineal care, and barrier cream application",
+      "Ryle’s tube/PEG feeding assistance and prescribed hydration schedule",
+      "Catheter bag emptying, drainage tube hygiene, and vitals monitoring",
     ],
     whatNotIncluded: [
-      'Clinical interventions, injections, or IV lines',
-      'Taking medical decisions on behalf of family',
+      "Acute ICU ventilation management without intensivist",
+      "Doctor consultations (must consult treating hospital physician)",
+      "Purchase of adult diapers, air beds, or medical tubes",
     ],
-    availabilityHours: '12 Hours (Day/Night) or 24 Hours',
-    availableDays: '7 Days a Week',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Chengalpattu'],
-    minimumDuration: '2 Days',
-    pricingModel: 'per_shift_12h',
-    basePrice: 850,
+    availabilityHours: "12-Hour Shift or 24-Hour Stay-in",
+    availableDays: "All 7 Days",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur", "Chengalpattu"],
+    minimumDuration: "3 Days commitment",
+    pricingModel: "per_shift_12h",
+    basePrice: 1400,
+    price12h: 1400,
+    price24h: 1700,
     additionalChargesNotice:
-      'Hospital attender duty may have minor surcharge based on hospital regulations.',
+      "Flat rates: ₹1,400 for 12 Hours | ₹1,700 for 24 Hours specialized bed-bound care.",
     requiredInformation: [
-      'Patient details, location (home or hospital name/ward)',
-      'Preferred shift timings',
+      "Doctor summary, presence of bed-sores (stage if any)",
+      "Ryle’s tube/catheter details and feeding schedule",
     ],
     faqs: [
       {
-        question: 'Can your attenders stay overnight in hospitals?',
+        question: "How do you prevent bedsores in bedridden patients?",
         answer:
-          'Yes, our attenders are accustomed to hospital bedside night shifts in Kanchipuram and Chengalpattu hospitals.',
+          "Our caregivers turn the patient position every 2 hours, inspect pressure points (sacrum, heels, elbows), apply barrier creams, and maintain dry, clean bedding.",
+      },
+      {
+        question: "What is the charge for Bedridden Patient Care?",
+        answer:
+          "Charges are ₹1,400 for 12-hour shifts and ₹1,700 for 24-hour continuous care.",
       },
     ],
-    cancellationPolicy:
-      '24-hour notice required for cancellation.',
-    termsNotice:
-      'Non-clinical support only. Hospital pass/permission to be arranged by family.',
-    seoTitle: 'Caregiver & Hospital Attender Services Kanchipuram & Vembedu',
+    cancellationPolicy: "24-hour notice required for schedule modifications.",
+    termsNotice: "Air mattress and hygiene supplies recommended for bed-bound recovery.",
+    seoTitle: "Bedridden Patient Care in Kanchipuram & Vembedu | Vaira Home Care",
     seoDescription:
-      'Trustworthy hospital attenders and home caregivers in Kanchipuram and Vembedu. 12-hour and 24-hour assistance for patients and seniors.',
+      "Expert bed-bound patient care in Kanchipuram. ₹1,400 for 12 Hours, ₹1,700 for 24 Hours. Bedsore prevention, sponge baths, and catheter hygiene.",
     isPublished: true,
   },
   {
-    id: 'srv-10',
-    slug: 'other-home-care-services',
-    name: 'Custom Home Care Coordination',
-    category: 'specialized',
+    id: "srv-04",
+    slug: "baby-care",
+    name: "Baby Care",
+    category: "specialized",
     shortDescription:
-      'Personalized home healthcare coordination for unique patient needs, palliative comfort, or combined nursing-attender care.',
-    image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=900&q=80',
+      "Gentle newborn and infant care by experienced baby caregivers: oil massage, baby bath, burping, sleep routine, and postpartum mother assistance.",
+    image: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=900&q=80",
     whoThisIsFor: [
-      'Patients needing a combination of nursing visits and daily attender care',
-      'Palliative comfort care for terminally ill patients in home setting',
-      'Post-delivery mother and newborn non-clinical supportive care',
-      'Any home care requirement not fully covered by standard packages',
+      "Newborn babies needing gentle traditional oil massage and warm water bath",
+      "First-time mothers needing postpartum guidance, rest, and feeding support",
+      "Infants needing structured nap schedules and soothing sleep routines",
+      "Families wanting vetted, hygienic, patient female baby caregivers",
     ],
     whatIncluded: [
-      'Initial care coordination call by senior supervisor',
-      'Tailored staff matching based on specific domestic requirements',
-      'Flexible scheduling (part-time, full-time, or split shift)',
-      'Dedicated case manager contact for continuous feedback',
+      "Traditional Ayurvedic / baby oil massage with proper gentle strokes",
+      "Safe warm water baby bath, navel hygiene, and skin moisturizing",
+      "Assisting mother with breastfeeding latching and bottle sterilization",
+      "Diaper change, cloth nappy changing, and rash care",
+      "Soothing crying babies, colic relief burping, and night calming",
     ],
     whatNotIncluded: [
-      'Unsupervised invasive clinical procedures',
-      'Services conflicting with medical safety or ethics',
+      "Pediatric medical diagnosis or administering unprescribed infant medications",
+      "Heavy cooking or household laundry for the entire family",
+      "Unsupervised infant transport outside home",
     ],
-    availabilityHours: 'Flexible / Customized',
-    availableDays: 'All days',
-    serviceAreas: ['Kanchipuram', 'Vembedu', 'Walajabad', 'Oragadam', 'Sriperumbudur', 'Chengalpattu'],
-    minimumDuration: 'Custom assessment',
-    pricingModel: 'custom',
-    basePrice: 0,
+    availabilityHours: "12-Hour Day Shift or 24-Hour Stay-in",
+    availableDays: "Daily",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur"],
+    minimumDuration: "7 Days commitment",
+    pricingModel: "per_shift_12h",
+    basePrice: 1200,
+    price12h: 1200,
+    price24h: 1500,
     additionalChargesNotice:
-      'Price will be assessed and confirmed by Vaira Home Care coordination team based on exact requirements.',
+      "Flat rates: ₹1,200 for 12 Hours | ₹1,500 for 24 Hours dedicated baby and mother care.",
     requiredInformation: [
-      'Detailed description of family/patient requirements',
-      'Doctor recommendations or special medical notes',
+      "Baby age in days/months and birth weight",
+      "Whether mother had normal delivery or C-section",
+      "Preferred shift: 12-hour day or 24-hour stay-in",
     ],
     faqs: [
       {
-        question: 'How quickly does the coordinator get in touch?',
+        question: "What are the charges for Baby Care?",
         answer:
-          'Our care coordinator contacts you within 2 business hours to understand the specific needs.',
+          "Baby Care is ₹1,200 for 12-hour daytime care and ₹1,500 for 24-hour round-the-clock stay-in assistance.",
+      },
+      {
+        question: "Does the caregiver also help the new mother?",
+        answer:
+          "Yes, our baby caregivers assist with preparing warm water, burping after feeding, and giving the mother essential recovery sleep.",
       },
     ],
-    cancellationPolicy:
-      'Custom terms discussed upon service agreement.',
-    termsNotice:
-      'Tailored service subject to mutual home safety review and staff availability.',
-    seoTitle: 'Custom Home Healthcare Coordination Kanchipuram | Vaira Home Care',
+    cancellationPolicy: "48-hour prior notice for recurring schedule adjustments.",
+    termsNotice: "Caregivers maintain strict hand sanitization before handling newborns.",
+    seoTitle: "Newborn Baby Care & Mother Support in Kanchipuram | Vaira Home Care",
     seoDescription:
-      'Customized home nursing and caregiver solutions tailored to your family needs in Kanchipuram, Vembedu, and nearby areas.',
+      "Compassionate baby care and infant massage in Kanchipuram and Vembedu. ₹1,200 for 12 Hours, ₹1,500 for 24 Hours. Verified female caregivers.",
+    isPublished: true,
+  },
+  {
+    id: "srv-05",
+    slug: "post-operative-care",
+    name: "Operator Care (Post-Operative Care)",
+    category: "nursing",
+    shortDescription:
+      "Professional clinical care following surgical operations: wound dressing, surgical drain monitoring, pain relief medications, and recovery.",
+    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=900&q=80",
+    whoThisIsFor: [
+      "Patients discharged following orthopedic surgeries (knee, hip, fracture fixations)",
+      "Patients recovering from abdominal, cardiac, general, or laparoscopic surgeries",
+      "Individuals needing sterile surgical dressings and drainage tube tracking",
+      "Surgical patients needing assisted mobilization under doctor protocols",
+    ],
+    whatIncluded: [
+      "Sterile aseptic wound dressing and incision monitoring for signs of infection",
+      "Doctor-prescribed oral/IV pain medication and antibiotic administration",
+      "Surgical drain recording, emptying, and output documentation",
+      "Assisted gentle mobilization, deep breathing, and DVT prevention exercises",
+      "Daily vitals charting and coordination with family regarding surgeon reviews",
+    ],
+    whatNotIncluded: [
+      "Suture or staple removal without written surgeon authorization",
+      "Independent medicine changes or altering surgeon prescriptions",
+      "Emergency operating interventions (hospital referral required)",
+    ],
+    availabilityHours: "12-Hour Shift or 24-Hour Stay-in",
+    availableDays: "All 7 Days",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur", "Chengalpattu"],
+    minimumDuration: "3 Days commitment",
+    pricingModel: "per_shift_12h",
+    basePrice: 1500,
+    price12h: 1500,
+    price24h: 1800,
+    additionalChargesNotice:
+      "Flat rates: ₹1,500 for 12 Hours | ₹1,800 for 24 Hours skilled post-operative operator care.",
+    requiredInformation: [
+      "Surgeon discharge summary & operation notes",
+      "Prescribed wound dressing schedule and medications",
+    ],
+    faqs: [
+      {
+        question: "What is the fee for Operator Care (Post-Operative)?",
+        answer:
+          "Operator Care is ₹1,500 for 12-hour shifts and ₹1,800 for 24-hour continuous post-surgical recovery.",
+      },
+      {
+        question: "Can your nurses dress surgical incisions at home?",
+        answer:
+          "Yes, our nurses are clinically trained in aseptic non-touch dressing techniques to prevent surgical site infections.",
+      },
+    ],
+    cancellationPolicy: "24-hour advance notice for reschedule or cancellation.",
+    termsNotice: "Surgeon discharge summary required prior to nurse deployment.",
+    seoTitle: "Operator Care & Post-Operative Recovery Nursing in Kanchipuram | Vaira Home Care",
+    seoDescription:
+      "Hospital-to-home post-operative operator care in Kanchipuram and Vembedu. ₹1,500 for 12 Hours, ₹1,800 for 24 Hours. Wound dressings and medication support.",
+    isPublished: true,
+  },
+  {
+    id: "srv-06",
+    slug: "special-operative-care",
+    name: "Special Operator Care (Special Post-Op)",
+    category: "nursing",
+    shortDescription:
+      "Intensive post-surgical nursing for high-dependency cases, major multi-trauma, cardiac/neuro surgery recovery, and complex surgical care.",
+    image: "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?auto=format&fit=crop&w=900&q=80",
+    whoThisIsFor: [
+      "Patients recovering from major complex surgeries (neuro, open-heart, spinal, oncology)",
+      "High-dependency post-op patients with multiple drains, stoma, or central lines",
+      "Post-surgical patients requiring strict hourly vitals and continuous ICU-grade vigilance",
+      "Elderly post-op patients with high delirium or pulmonary complications risk",
+    ],
+    whatIncluded: [
+      "Continuous clinical vital parameters logging (BP, Pulse, SpO2, Temperature, Sugar)",
+      "Complex sterile dressings (laparotomy, orthopedic implants, chest tube sites)",
+      "Multiple drain output measurement, fluid balance chart, and urine output tracking",
+      "Administration of specialized IV infusions, antibiotics, and analgesic regimens",
+      "Immediate escalation and emergency reporting to family and operating surgeon",
+    ],
+    whatNotIncluded: [
+      "Mechanical ventilator programming without attending intensivist instructions",
+      "Independent prescription changes",
+      "General household chores",
+    ],
+    availabilityHours: "12-Hour Shift or 24-Hour Stay-in",
+    availableDays: "All 7 Days",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur", "Chengalpattu"],
+    minimumDuration: "3 Days commitment",
+    pricingModel: "per_shift_12h",
+    basePrice: 1800,
+    price12h: 1800,
+    price24h: 2100,
+    additionalChargesNotice:
+      "Flat rates: ₹1,800 for 12 Hours | ₹2,100 for 24 Hours advanced surgical operator care.",
+    requiredInformation: [
+      "Hospital operation theatre discharge summary and ICU transfer note",
+      "Emergency surgeon contact and specific postoperative orders",
+    ],
+    faqs: [
+      {
+        question: "What is the charge for Special Operator Care?",
+        answer:
+          "Special Operator Care is ₹1,800 for 12-hour shifts and ₹2,100 for 24-hour round-the-clock intensive care.",
+      },
+      {
+        question: "Who attends these special cases?",
+        answer:
+          "Senior registered nurses with experience in surgical wards and intensive recovery units.",
+      },
+    ],
+    cancellationPolicy: "24-hour notice required for cancellations.",
+    termsNotice: "Specialized clinical service subject to surgeon discharge protocol.",
+    seoTitle: "Special Post-Operative Care Kanchipuram & Vembedu | Vaira Home Care",
+    seoDescription:
+      "Advanced surgical recovery care in Kanchipuram. ₹1,800 for 12 Hours, ₹2,100 for 24 Hours. Dedicated nurses for complex surgical patients.",
+    isPublished: true,
+  },
+  {
+    id: "srv-07",
+    slug: "home-care-support",
+    name: "Home Care Support",
+    category: "elderly",
+    shortDescription:
+      "Compassionate daily home care assistance, senior companionship, medication reminders, walking support, and domestic caregiving.",
+    image: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=900&q=80",
+    whoThisIsFor: [
+      "Senior citizens living independently needing daily support and companionship",
+      "Elders needing gentle assisted walking, fall prevention, and meal accompaniment",
+      "Individuals needing polite reminders for prescription medicines and hydration",
+      "Families seeking a respectful, trustworthy caregiver for elderly parents",
+    ],
+    whatIncluded: [
+      "Personal grooming assistance, sponge bath, and clothing assistance",
+      "Assisted walking, light exercise support, and fall-risk monitoring",
+      "Timely reminders for prescribed medications and nutritious meals",
+      "Warming and serving meals, feeding support, and kitchen hydration",
+      "Respectful companionship, listening, and polite daily conversation in Tamil/English",
+    ],
+    whatNotIncluded: [
+      "Invasive clinical injections or nursing procedures (handled by nurses)",
+      "Heavy domestic house cleaning or cooking for large gatherings",
+      "Financial handling or bank transactions",
+    ],
+    availabilityHours: "12-Hour Shift (Day/Night) or 24-Hour Stay-in",
+    availableDays: "Monday to Sunday",
+    serviceAreas: ["Tambaram", "Vandalur", "Perungalathur", "Urapakkam", "Kanchipuram", "Vembedu", "Walajabad", "Oragadam", "Sriperumbudur"],
+    minimumDuration: "3 Days commitment",
+    pricingModel: "per_shift_12h",
+    basePrice: 1100,
+    price12h: 1100,
+    price24h: 1400,
+    additionalChargesNotice:
+      "Flat rates: ₹1,100 for 12 Hours | ₹1,400 for 24 Hours supportive elder home care.",
+    requiredInformation: [
+      "Elder age, daily routine preferences, and mobility level",
+      "Primary family member contact and residence address",
+    ],
+    faqs: [
+      {
+        question: "What is the cost for Home Care Support?",
+        answer:
+          "Home Care Support is ₹1,100 for 12-hour shifts and ₹1,400 for 24-hour continuous care.",
+      },
+      {
+        question: "Do your caregivers speak Tamil?",
+        answer:
+          "Yes! All caregivers are local to Kanchipuram and Vembedu and speak fluent Tamil.",
+      },
+    ],
+    cancellationPolicy: "24-hour advance notice for reschedule or cancellation.",
+    termsNotice: "Non-clinical supportive care. Background verified caregivers.",
+    seoTitle: "Home Care Support & Elder Assistance Kanchipuram | Vaira Home Care",
+    seoDescription:
+      "Compassionate elder home care support in Kanchipuram and Vembedu. ₹1,100 for 12 Hours, ₹1,400 for 24 Hours. Punctual, verified caregivers.",
     isPublished: true,
   },
 ];
@@ -579,39 +449,39 @@ export const initialStaff: StaffMember[] = [];
 
 export const initialReviews: CustomerReview[] = [
   {
-    id: 'rev-01',
-    requestId: 'VC-2026-000101',
-    customerName: 'Senthil Nathan (Collectorate Road, Kanchipuram)',
-    serviceName: '24-Hour Home Nursing',
+    id: "rev-01",
+    requestId: "VC-2026-000101",
+    customerName: "Senthil Nathan (Collectorate Road, Kanchipuram)",
+    serviceName: "Home Nursing Care",
     rating: 5,
     reviewText:
-      'We engaged Vaira Home Care for my father after his cardiac stent procedure. Sister Revathi was extremely punctual, gentle, and monitored his BP and medications with great discipline. Having a verified nurse at home gave our family tremendous relief.',
-    careFeedback: 'Very professional, kept daily vitals chart clearly documented.',
-    createdAt: '2026-09-10T14:30:00Z',
+      "We engaged Vaira Home Care for my father after his cardiac stent procedure. Sister Revathi was extremely punctual, gentle, and monitored his BP and medications with great discipline. Having a verified nurse at home gave our family tremendous relief.",
+    careFeedback: "Very professional, kept daily vitals chart clearly documented.",
+    createdAt: "2026-09-10T14:30:00Z",
     isApproved: true,
   },
   {
-    id: 'rev-02',
-    requestId: 'VC-2026-000102',
-    customerName: 'Vasantha Kumari (Vembedu)',
-    serviceName: 'Senior Citizen Care',
+    id: "rev-02",
+    requestId: "VC-2026-000102",
+    customerName: "Vasantha Kumari (Vembedu)",
+    serviceName: "Home Care Support",
     rating: 5,
     reviewText:
-      'My 82-year-old mother lives in Vembedu while I work in Chennai. Caregiver Lakshmi has been a blessing. She helps with daily walking, ensures medicine timings, and speaks with utmost respect. Truly grateful for Vaira Home Care.',
-    careFeedback: 'Friendly, patient, and speaks Tamil naturally with my mother.',
-    createdAt: '2026-09-12T11:00:00Z',
+      "My 82-year-old mother lives in Vembedu while I work in Chennai. Caregiver Lakshmi has been a blessing. She helps with daily walking, ensures medicine timings, and speaks with utmost respect. Truly grateful for Vaira Home Care.",
+    careFeedback: "Friendly, patient, and speaks Tamil naturally with my mother.",
+    createdAt: "2026-09-12T11:00:00Z",
     isApproved: true,
   },
   {
-    id: 'rev-03',
-    requestId: 'VC-2026-000103',
-    customerName: 'Gopinath R. (Oragadam)',
-    serviceName: 'Post-Operative Care',
+    id: "rev-03",
+    requestId: "VC-2026-000103",
+    customerName: "Gopinath R. (Oragadam)",
+    serviceName: "Post-Operative Care",
     rating: 5,
     reviewText:
-      'Excellent wound care dressing service after my knee surgery. Nurse Mary visited on alternate days exactly on time, used sterile packs, and the healing progressed smoothly without any complications.',
-    careFeedback: 'Very neat dressing technique and followed doctor advice strictly.',
-    createdAt: '2026-09-14T09:15:00Z',
+      "Excellent post-operative care service after my knee surgery. Nurse Mary visited on 12-hour shifts exactly on time, used sterile packs, and the healing progressed smoothly without any complications.",
+    careFeedback: "Very neat dressing technique and followed doctor advice strictly.",
+    createdAt: "2026-09-14T09:15:00Z",
     isApproved: true,
   },
 ];
