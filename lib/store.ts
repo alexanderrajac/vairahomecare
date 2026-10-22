@@ -69,26 +69,36 @@ export function useVairaStore() {
         }
       }
 
-      const storedBookings = localStorage.getItem(STORAGE_KEYS.BOOKINGS);
-      if (storedBookings) setBookings(JSON.parse(storedBookings));
+      const safeParseItem = <T>(key: string, fallback: T): T => {
+        try {
+          const item = localStorage.getItem(key);
+          if (!item || item === 'undefined' || item === 'null') return fallback;
+          return JSON.parse(item);
+        } catch {
+          return fallback;
+        }
+      };
 
-      const storedStaff = localStorage.getItem(STORAGE_KEYS.STAFF);
-      if (storedStaff) setStaff(JSON.parse(storedStaff));
+      const storedBookings = safeParseItem<BookingRequest[] | null>(STORAGE_KEYS.BOOKINGS, null);
+      if (storedBookings && Array.isArray(storedBookings)) setBookings(storedBookings);
 
-      const storedReviews = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-      if (storedReviews) setReviews(JSON.parse(storedReviews));
+      const storedStaff = safeParseItem<StaffMember[] | null>(STORAGE_KEYS.STAFF, null);
+      if (storedStaff && Array.isArray(storedStaff)) setStaff(storedStaff);
 
-      const storedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (storedSettings) setSettings(JSON.parse(storedSettings));
+      const storedReviews = safeParseItem<CustomerReview[] | null>(STORAGE_KEYS.REVIEWS, null);
+      if (storedReviews && Array.isArray(storedReviews)) setReviews(storedReviews);
 
-      const storedNotifications = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-      if (storedNotifications) setNotifications(JSON.parse(storedNotifications));
+      const storedSettings = safeParseItem<BusinessSettings | null>(STORAGE_KEYS.SETTINGS, null);
+      if (storedSettings && typeof storedSettings === 'object') setSettings(storedSettings);
 
-      const storedSession = localStorage.getItem(STORAGE_KEYS.STAFF_SESSION);
-      if (storedSession) setCurrentStaffSession(JSON.parse(storedSession));
+      const storedNotifications = safeParseItem<NotificationItem[] | null>(STORAGE_KEYS.NOTIFICATIONS, null);
+      if (storedNotifications && Array.isArray(storedNotifications)) setNotifications(storedNotifications);
 
-      const storedUser = localStorage.getItem(STORAGE_KEYS.USER_SESSION);
-      if (storedUser) setCurrentUser(JSON.parse(storedUser));
+      const storedSession = safeParseItem<StaffAuthSession | null>(STORAGE_KEYS.STAFF_SESSION, null);
+      if (storedSession) setCurrentStaffSession(storedSession);
+
+      const storedUser = safeParseItem<AuthUser | null>(STORAGE_KEYS.USER_SESSION, null);
+      if (storedUser) setCurrentUser(storedUser);
 
       if (isSupabaseConfigured()) {
         supabase.auth.getSession().then(({ data }) => {

@@ -6,6 +6,7 @@ import StickyMobileActions from '@/components/StickyMobileActions';
 import FloatingActions from '@/components/FloatingActions';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.vairanursinghomecares.com'),
   title: 'Vaira Home Care Service | Bedside Nursing & Elder Care Kanchipuram & Vembedu',
   description:
     'Professional, mobile-first home healthcare booking for 24-hour nursing, senior citizen care, patient recovery, and surgical dressing in Kanchipuram, Vembedu, and surrounding districts.',
