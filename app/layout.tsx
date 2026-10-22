@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     apple: '/logo.jpg',
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'google-site-verification=vaira-home-care-gsc-verify',
+    google: 'xVAgJqu9tNuX6LGGai1GMeIyhbvvL--7Cz-ydHHkaww',
   },
   openGraph: {
     title: 'Vaira Home Care Service | Trusted Home Healthcare',
@@ -40,15 +40,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gscCode = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'google-site-verification=vaira-home-care-gsc-verify';
-
   return (
     <html lang="en">
       <head>
         <link rel="icon" href="/logo.jpg" />
         <link rel="apple-touch-icon" href="/logo.jpg" />
         {/* Google Search Console HTML Meta Tag Verification */}
-        <meta name="google-site-verification" content={gscCode} />
+        <meta name="google-site-verification" content="xVAgJqu9tNuX6LGGai1GMeIyhbvvL--7Cz-ydHHkaww" />
+        <meta name="google-site-verification" content="google-site-verification=xVAgJqu9tNuX6LGGai1GMeIyhbvvL--7Cz-ydHHkaww" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

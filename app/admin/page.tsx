@@ -348,7 +348,7 @@ export default function AdminDashboardPage() {
               Domain verification tags are embedded in the &lt;head&gt; of all pages for Google Search Console indexing.
             </p>
             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-700 break-all select-all">
-              &lt;meta name="google-site-verification" content="vaira-home-care-gsc-verify" /&gt;
+              &lt;meta name="google-site-verification" content="xVAgJqu9tNuX6LGGai1GMeIyhbvvL--7Cz-ydHHkaww" /&gt;
             </div>
             <div className="flex items-center justify-between pt-1">
               <a
