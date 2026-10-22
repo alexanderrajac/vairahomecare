@@ -48,13 +48,20 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
-                <Heart className="w-4 h-4" />
+              <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg border border-white/10 shrink-0">
+                <img
+                  src="/logo.jpg"
+                  alt="Vaira Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-[16px] font-black text-white tracking-tight">VAIRA HOME CARE</span>
+              <div>
+                <span className="text-[16px] font-black text-white tracking-tight block">VAIRA HOME CARE</span>
+                <span className="text-[11px] text-emerald-400 font-semibold tracking-wide">Nursing &amp; Care Agency</span>
+              </div>
             </div>
             <p className="text-[13px] text-slate-400 leading-relaxed">
-              Trusted, verified, and compassionate home nursing, elderly care, and post-operative recovery across Kanchipuram and Vembedu.
+              Trusted, verified, and compassionate home nursing, elderly care, and post-operative recovery across Chennai, Vandalur, Kanchipuram, and Vembedu.
             </p>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-[12px] text-slate-400">

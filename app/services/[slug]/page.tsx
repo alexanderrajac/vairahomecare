@@ -22,9 +22,11 @@ import {
   Sparkles,
   ChevronRight,
   Calculator,
+  Zap,
 } from 'lucide-react';
 import { useVairaStore } from '@/lib/store';
 import { initialBusinessSettings } from '@/lib/data';
+import DirectBookingModal from '@/components/DirectBookingModal';
 
 export default function ServiceDetailsPage() {
   const params = useParams();
@@ -38,6 +40,7 @@ export default function ServiceDetailsPage() {
   // Quick duration calculator state
   const [calcShift, setCalcShift] = useState<'12h' | '24h'>('12h');
   const [calcDuration, setCalcDuration] = useState<number>(7);
+  const [showDirectCheckout, setShowDirectCheckout] = useState(false);
 
   if (!service) {
     return (
@@ -145,11 +148,20 @@ export default function ServiceDetailsPage() {
 
               {/* Primary Call to Action Bar */}
               <div className="flex flex-wrap items-center gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDirectCheckout(true)}
+                  className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                >
+                  <Zap className="w-4 h-4 fill-current" />
+                  <span>DIRECT 1-CLICK BOOK</span>
+                </button>
+
                 <Link
                   href={`/book?service=${service.slug}`}
-                  className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl transition-all"
                 >
-                  <span>REQUEST THIS SERVICE</span>
+                  <span>Checkout Page</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
@@ -539,11 +551,19 @@ export default function ServiceDetailsPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowDirectCheckout(true)}
+              className="flex items-center gap-2 bg-white text-emerald-950 hover:bg-emerald-50 font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <Zap className="w-4 h-4 fill-current text-emerald-600" />
+              <span>DIRECT 1-CLICK BOOK</span>
+            </button>
             <Link
               href={`/book?service=${service.slug}`}
-              className="bg-white text-emerald-950 hover:bg-emerald-50 font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95"
+              className="bg-black/30 hover:bg-black/40 border border-white/20 text-white font-bold text-xs sm:text-sm px-5 py-3.5 rounded-2xl transition-all"
             >
-              REQUEST THIS SERVICE
+              REQUEST DESK
             </Link>
             <a
               href={`tel:${initialBusinessSettings.phone1.replace(/\s+/g, '')}`}
@@ -554,6 +574,14 @@ export default function ServiceDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* 1-Click Direct eCommerce Checkout Modal */}
+      <DirectBookingModal
+        service={service}
+        isOpen={showDirectCheckout}
+        onClose={() => setShowDirectCheckout(false)}
+        defaultShift={calcShift}
+      />
     </div>
   );
 }

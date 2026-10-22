@@ -1,13 +1,18 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { ServiceItem } from '@/lib/types';
 import { Clock, MapPin, ArrowRight, ShieldCheck, ShoppingCart, Star, Zap } from 'lucide-react';
+import DirectBookingModal from '@/components/DirectBookingModal';
 
 interface ServiceCardProps {
   service: ServiceItem;
 }
 
 export default function ServiceCard({ service }: ServiceCardProps) {
+  const [showDirectBooking, setShowDirectBooking] = useState(false);
+
   const categoryColors: Record<string, { bg: string; text: string; border: string; gradFrom: string; gradTo: string }> = {
     nursing:     { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', gradFrom: 'from-blue-500', gradTo: 'to-indigo-600' },
     elderly:     { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', gradFrom: 'from-amber-400', gradTo: 'to-orange-500' },
@@ -112,16 +117,24 @@ export default function ServiceCard({ service }: ServiceCardProps) {
           >
             View Details
           </Link>
-          <Link
-            href={`/book?service=${service.slug}`}
-            className="flex items-center justify-center gap-1.5 text-[12px] font-bold text-white py-2.5 px-3 rounded-xl shadow-sm transition-all duration-200 hover:shadow-green-600/35 active:scale-95"
+          <button
+            type="button"
+            onClick={() => setShowDirectBooking(true)}
+            className="flex items-center justify-center gap-1.5 text-[12px] font-bold text-white py-2.5 px-3 rounded-xl shadow-sm transition-all duration-200 hover:shadow-green-600/35 active:scale-95 cursor-pointer"
             style={{ background: 'linear-gradient(135deg, #16a34a, #0d9488)', boxShadow: '0 4px 12px rgba(22,163,74,0.25)' }}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
             <span>Book Now</span>
-          </Link>
+          </button>
         </div>
       </div>
+
+      {/* 1-Click Direct eCommerce Checkout Modal */}
+      <DirectBookingModal
+        service={service}
+        isOpen={showDirectBooking}
+        onClose={() => setShowDirectBooking(false)}
+      />
     </div>
   );
 }

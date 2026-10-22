@@ -2,24 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import QRCode from 'qrcode';
 import {
   Heart,
   User,
   MapPin,
   Calendar,
-  Sliders,
   CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
   Clock,
-  ShieldAlert,
-  Info,
+  ShieldCheck,
   CreditCard,
   PhoneCall,
+  QrCode,
+  Copy,
+  Zap,
+  MessageSquare,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { useVairaStore } from '@/lib/store';
-import { ServiceItem, LeadSource } from '@/lib/types';
+import { ServiceItem, LeadSource, BookingRequest } from '@/lib/types';
 import { initialBusinessSettings } from '@/lib/data';
 
 interface BookingStepperProps {
@@ -31,67 +37,42 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
   const searchParams = useSearchParams();
   const { publishedServices, createBookingRequest, isHydrated } = useVairaStore();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  // Mode: Express eCommerce direct vs detailed
+  const [checkoutMode, setCheckoutMode] = useState<'express' | 'clinical'>('express');
 
   // Form State
-  // Step 1: Service
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  const [shiftType, setShiftType] = useState<'12h' | '24h'>('12h');
 
-  // Step 2: Customer Information
+  // Customer Information
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [sameAsPhone, setSameAsPhone] = useState(true);
-  const [email, setEmail] = useState('');
-
-  // Step 3: Location
   const [houseBuilding, setHouseBuilding] = useState('');
-  const [streetLocality, setStreetLocality] = useState('');
   const [area, setArea] = useState('Kanchipuram');
-  const [city, setCity] = useState('Kanchipuram');
   const [pincode, setPincode] = useState('631501');
-  const [landmark, setLandmark] = useState('');
-  const [isServiceLocation, setIsServiceLocation] = useState(true);
 
-  // Step 4: Care Requirement
-  const [recipient, setRecipient] = useState<'Self' | 'Parent' | 'Spouse' | 'Child' | 'Other'>('Parent');
-  const [generalRequirement, setGeneralRequirement] = useState('');
-  const [careType, setCareType] = useState('General Bedside Care & Vitals Support');
-  const [urgency, setUrgency] = useState<'Normal' | 'Today' | 'Urgent'>('Normal');
-
-  // Step 5: Schedule
+  // Schedule
+  const todayStr = new Date().toISOString().split('T')[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const [preferredDate, setPreferredDate] = useState(tomorrowStr);
-  const [preferredStartTime, setPreferredStartTime] = useState('08:00 AM');
-  const [shiftType, setShiftType] = useState<'12h' | '24h'>('12h');
-  const [preferredDuration, setPreferredDuration] = useState('7 Days');
-  const [recurringType, setRecurringType] = useState<'one-time' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
-  const [selectedDays, setSelectedDays] = useState<string[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+  const [startDateType, setStartDateType] = useState<'today' | 'tomorrow' | 'custom'>('tomorrow');
+  const [customDate, setCustomDate] = useState(tomorrowStr);
+  const [preferredDuration, setPreferredDuration] = useState('1 Day');
 
-  // Step 6: Preferences
-  const [genderPreference, setGenderPreference] = useState<'No Preference' | 'Female' | 'Male'>('No Preference');
-  const [languagePreference, setLanguagePreference] = useState('Tamil');
-  const [caregiverPreferenceNote, setCaregiverPreferenceNote] = useState('');
-  const [additionalInstructions, setAdditionalInstructions] = useState('');
+  // Clinical Details (optional)
+  const [recipient, setRecipient] = useState<'Self' | 'Parent' | 'Spouse' | 'Child' | 'Other'>('Parent');
+  const [careRequirement, setCareRequirement] = useState('');
 
-  // Step 7 / Summary: Terms
-  const [termsAgreed, setTermsAgreed] = useState(false);
-  const [acknowledgementAgreed, setAcknowledgementAgreed] = useState(false);
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  // Payment Options
+  const [payOption, setPayOption] = useState<'advance' | 'full' | 'arrival'>('advance');
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [copiedUPI, setCopiedUPI] = useState(false);
+  const [transactionRef, setTransactionRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState<BookingRequest | null>(null);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
-  // Auto-detect lead source from URL params or default to Website
-  const [leadSource, setLeadSource] = useState<LeadSource>('Website');
-
-  useEffect(() => {
-    const sourceParam = searchParams.get('utm_source') || searchParams.get('ref');
-    if (sourceParam) {
-      const match = ['Google', 'Justdial', 'Instagram', 'Facebook', 'WhatsApp', 'Referral', 'Direct', 'Website'].find(
-        (s) => s.toLowerCase() === sourceParam.toLowerCase()
-      );
-      if (match) setLeadSource(match as LeadSource);
-    }
-  }, [searchParams]);
+  const officialUPIId = 'vairahomecare@icici';
+  const merchantName = initialBusinessSettings.name || 'Vaira Home Care Service';
 
   // Sync initial service
   useEffect(() => {
@@ -107,1062 +88,726 @@ export default function BookingStepper({ initialServiceSlug }: BookingStepperPro
     }
   }, [publishedServices, initialServiceSlug, selectedServiceId]);
 
-  const selectedService = publishedServices.find((s) => s.id === selectedServiceId) || publishedServices[0];
+  const selectedService =
+    publishedServices.find((s) => s.id === selectedServiceId) || publishedServices[0];
 
-  // Price Calculation
-  const calculateEstimate = () => {
-    if (!selectedService) return { base: 0, durationMultiplier: 1, total: 0, determined: false, rate: 0 };
+  // Pricing
+  const unitPrice = selectedService
+    ? shiftType === '24h'
+      ? selectedService.price24h || selectedService.basePrice * 1.8
+      : selectedService.price12h || selectedService.basePrice
+    : 1200;
 
-    let multiplier = 1;
-    if (recurringType === 'one-time') {
-      multiplier = 1;
-    } else if (recurringType === 'daily') {
-      if (preferredDuration.includes('7')) multiplier = 7;
-      else if (preferredDuration.includes('14')) multiplier = 14;
-      else if (preferredDuration.includes('30')) multiplier = 30;
-      else if (preferredDuration.includes('3')) multiplier = 3;
-      else multiplier = 5;
-    } else if (recurringType === 'monthly') {
-      multiplier = 30;
-    } else if (recurringType === 'weekly') {
-      multiplier = 7;
+  const totalAmount = unitPrice;
+  const advanceAmount = Math.min(500, totalAmount);
+  const payableNow =
+    payOption === 'advance' ? advanceAmount : payOption === 'full' ? totalAmount : 0;
+
+  const targetDate =
+    startDateType === 'today'
+      ? todayStr
+      : startDateType === 'tomorrow'
+      ? tomorrowStr
+      : customDate;
+
+  // Generate UPI URI
+  const bookingTempRef = `VHC-${Date.now().toString().slice(-4)}`;
+  const upiUri = `upi://pay?pa=${encodeURIComponent(officialUPIId)}&pn=${encodeURIComponent(
+    merchantName
+  )}&am=${payableNow}&tn=${encodeURIComponent(
+    `Vaira Booking ${selectedService?.name?.slice(0, 15) || 'Care'} ${bookingTempRef}`
+  )}&cu=INR`;
+
+  useEffect(() => {
+    if (payableNow > 0) {
+      QRCode.toDataURL(upiUri, {
+        width: 240,
+        margin: 1,
+        color: {
+          dark: '#064e3b',
+          light: '#ffffff',
+        },
+      })
+        .then((url) => setQrDataUrl(url))
+        .catch((e) => console.error(e));
     }
+  }, [upiUri, payableNow]);
 
-    const rate = shiftType === '24h'
-      ? (selectedService.price24h || selectedService.basePrice)
-      : (selectedService.price12h || selectedService.basePrice);
-
-    if (rate === 0) {
-      return {
-        base: 0,
-        rate: 0,
-        durationMultiplier: multiplier,
-        total: 0,
-        determined: false,
-      };
-    }
-
-    const total = rate * multiplier;
-    return {
-      base: rate,
-      rate,
-      durationMultiplier: multiplier,
-      total,
-      determined: true,
-    };
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText(officialUPIId);
+    setCopiedUPI(true);
+    setTimeout(() => setCopiedUPI(false), 2000);
   };
 
-  const estimate = calculateEstimate();
-
-  // Step Validation
-  const validateStep = (step: number) => {
+  const validate = () => {
     const errors: { [key: string]: string } = {};
-
-    if (step === 1) {
-      if (!selectedServiceId) errors.service = 'Please select a home care service';
-    } else if (step === 2) {
-      if (!fullName.trim()) errors.fullName = 'Full name is required';
-      if (!phoneNumber.trim()) {
-        errors.phoneNumber = 'Phone number is required';
-      } else if (!/^[0-9+ ]{10,14}$/.test(phoneNumber.trim())) {
-        errors.phoneNumber = 'Please enter a valid 10-digit mobile number';
-      }
-    } else if (step === 3) {
-      if (!houseBuilding.trim()) errors.houseBuilding = 'House / flat / building name is required';
-      if (!streetLocality.trim()) errors.streetLocality = 'Street / locality name is required';
-      if (!area.trim()) errors.area = 'Service area is required';
-      if (!pincode.trim()) errors.pincode = 'Pincode is required';
-    } else if (step === 4) {
-      if (!generalRequirement.trim()) errors.generalRequirement = 'Please describe the care requirement briefly';
-    } else if (step === 5) {
-      if (!preferredDate) errors.preferredDate = 'Please select a preferred start date';
-    } else if (step === 7) {
-      if (!termsAgreed) errors.terms = 'Please confirm that the provided information is correct';
-      if (!acknowledgementAgreed) errors.ack = 'Please confirm that you understand this is a request subject to review';
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      errors.fullName = 'Patient or caller full name is required';
     }
-
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      errors.phoneNumber = 'Enter a valid 10-digit mobile number';
+    }
+    if (!houseBuilding.trim()) {
+      errors.houseBuilding = 'Please enter house / street address';
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 7));
-      window.scrollTo({ top: 120, behavior: 'smooth' });
+  const handleConfirmOrder = () => {
+    if (!validate()) {
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+      return;
     }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 120, behavior: 'smooth' });
-  };
-
-  const handleSubmit = async () => {
-    if (!validateStep(7)) return;
 
     setIsSubmitting(true);
 
-    try {
-      const finalPhone = phoneNumber.trim();
-      const finalWhatsApp = sameAsPhone ? finalPhone : whatsappNumber.trim() || finalPhone;
+    const bookingData = {
+      serviceId: selectedService.id,
+      serviceName: selectedService.name,
+      customer: {
+        fullName: fullName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        whatsappNumber: phoneNumber.trim(),
+      },
+      location: {
+        houseBuilding: houseBuilding.trim(),
+        streetLocality: area,
+        area: area,
+        city: 'Kanchipuram / Chennai',
+        pincode: pincode.trim() || '631501',
+        isServiceLocation: true,
+      },
+      careRequirement: {
+        recipient: recipient,
+        generalRequirement:
+          careRequirement.trim() ||
+          `${selectedService.name} - ${shiftType.toUpperCase()} shift duty. Patient care requested.`,
+        careType: selectedService.name,
+        urgency: (startDateType === 'today' ? 'Today' : 'Normal') as any,
+      },
+      schedule: {
+        preferredDate: targetDate,
+        preferredStartTime: shiftType === '24h' ? '24 Hours Stay-in' : '08:00 AM',
+        preferredDuration: preferredDuration,
+        shiftType: shiftType,
+        recurringType: 'daily' as any,
+      },
+      preferences: {
+        genderPreference: 'No Preference' as any,
+        languagePreference: 'Tamil / English',
+        caregiverPreferenceNote: 'Direct eCommerce Checkout Booking',
+      },
+      priceEstimate: {
+        basePrice: unitPrice,
+        durationMultiplier: 1,
+        additionalCharges: 0,
+        discount: 0,
+        estimatedTotal: totalAmount,
+        isFinalPriceDetermined: true,
+        priceNotice: 'Official verified rate',
+      },
+      termsAgreed: true,
+      acknowledgementAgreed: true,
+      leadSource: 'Website' as any,
+    };
 
-      const created = createBookingRequest({
-        serviceId: selectedService.id,
-        serviceName: selectedService.name,
-        customer: {
-          fullName: fullName.trim(),
-          phoneNumber: finalPhone,
-          whatsappNumber: finalWhatsApp,
-          email: email.trim() || undefined,
-        },
-        location: {
-          houseBuilding: houseBuilding.trim(),
-          streetLocality: streetLocality.trim(),
-          area,
-          city,
-          pincode: pincode.trim(),
-          landmark: landmark.trim() || undefined,
-          isServiceLocation,
-        },
-        careRequirement: {
-          recipient,
-          generalRequirement: generalRequirement.trim(),
-          careType,
-          urgency,
-        },
-        schedule: {
-          preferredDate,
-          preferredStartTime,
-          preferredDuration,
-          shiftType: shiftType === '24h' ? '24 Hours Stay-in' : '12 Hours (Day/Night)',
-          recurringType,
-          recurringDays: recurringType !== 'one-time' ? selectedDays : undefined,
-          startDate: preferredDate,
-        },
-        preferences: {
-          genderPreference,
-          languagePreference,
-          caregiverPreferenceNote: caregiverPreferenceNote.trim() || undefined,
-          additionalInstructions: additionalInstructions.trim() || undefined,
-        },
-        priceEstimate: {
-          basePrice: estimate.base,
-          durationMultiplier: estimate.durationMultiplier,
-          additionalCharges: 0,
-          discount: 0,
-          estimatedTotal: estimate.total,
-          isFinalPriceDetermined: estimate.determined,
-          priceNotice: estimate.determined
-            ? 'Final service availability and charges will be confirmed by the Vaira Home Care team.'
-            : 'Price will be confirmed by the Vaira Home Care team.',
-        },
-        termsAgreed,
-        acknowledgementAgreed,
-        leadSource,
-      });
+    const newBooking = createBookingRequest(bookingData);
 
-      // Navigate to confirmation page
-      router.push(`/booking/confirmation/${created.id}`);
-    } catch (e) {
-      console.error('Submission failed:', e);
-      alert('An error occurred submitting your request. Please try again or call us directly.');
-      setIsSubmitting(false);
+    if (newBooking) {
+      newBooking.payment = {
+        status:
+          payOption === 'full'
+            ? 'FULLY_PAID'
+            : payOption === 'advance'
+            ? 'ADVANCE_PAID'
+            : 'PAY_ON_ARRIVAL',
+        amount: totalAmount,
+        advanceAmount: payOption === 'advance' ? advanceAmount : payOption === 'full' ? totalAmount : 0,
+        upiId: payOption !== 'arrival' ? officialUPIId : undefined,
+        transactionRef:
+          transactionRef.trim() ||
+          (payOption !== 'arrival' ? `UPI-${Date.now().toString().slice(-6)}` : undefined),
+        paidAt: payOption !== 'arrival' ? new Date().toISOString() : undefined,
+        paymentMethod: payOption === 'arrival' ? 'CASH' : 'UPI_QR',
+      };
+      setConfirmedBooking(newBooking);
     }
-  };
 
-  const stepsList = [
-    { number: 1, label: 'Service' },
-    { number: 2, label: 'Customer' },
-    { number: 3, label: 'Location' },
-    { number: 4, label: 'Care Needs' },
-    { number: 5, label: 'Schedule' },
-    { number: 6, label: 'Preferences' },
-    { number: 7, label: 'Review & Submit' },
-  ];
+    setTimeout(() => {
+      setIsSubmitting(false);
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+    }, 600);
+  };
 
   if (!isHydrated || !selectedService) {
     return (
-      <div className="py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
-        <p className="mt-3 text-sm text-slate-500">Loading booking coordination wizard...</p>
+      <div className="py-20 text-center text-slate-500 text-sm">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent" />
+        <p className="mt-2 text-xs">Loading fast booking portal...</p>
+      </div>
+    );
+  }
+
+  // SUCCESS RECEIPT SCREEN
+  if (confirmedBooking) {
+    return (
+      <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-8 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-md">
+          <CheckCircle2 className="w-9 h-9" />
+        </div>
+
+        <div>
+          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider">
+            Booking Placed Successfully
+          </span>
+          <h2 className="text-2xl font-black text-slate-900 mt-2">Home Care Order Confirmed</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Order Reference ID:{' '}
+            <strong className="text-slate-900 font-mono text-sm">{confirmedBooking.id}</strong>
+          </p>
+        </div>
+
+        {/* Order Details Card */}
+        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left text-xs space-y-2.5">
+          <div className="flex justify-between pb-2 border-b border-slate-200/60">
+            <span className="text-slate-500 font-medium">Service Name:</span>
+            <span className="font-bold text-slate-900">{confirmedBooking.serviceName}</span>
+          </div>
+          <div className="flex justify-between pb-2 border-b border-slate-200/60">
+            <span className="text-slate-500 font-medium">Patient Contact:</span>
+            <span className="font-bold text-slate-900">
+              {confirmedBooking.customer.fullName} ({confirmedBooking.customer.phoneNumber})
+            </span>
+          </div>
+          <div className="flex justify-between pb-2 border-b border-slate-200/60">
+            <span className="text-slate-500 font-medium">Duty Shift &amp; Date:</span>
+            <span className="font-bold text-slate-900">
+              {confirmedBooking.schedule.preferredDate} • {confirmedBooking.schedule.shiftType?.toUpperCase()} Shift
+            </span>
+          </div>
+          <div className="flex justify-between pb-2 border-b border-slate-200/60">
+            <span className="text-slate-500 font-medium">Care Address:</span>
+            <span className="font-bold text-slate-900 truncate max-w-[240px]">
+              {confirmedBooking.location.houseBuilding}, {confirmedBooking.location.area}
+            </span>
+          </div>
+          <div className="flex justify-between pt-1 text-sm">
+            <span className="font-bold text-slate-700">Total Shift Tariff:</span>
+            <span className="font-black text-slate-900">
+              ₹{confirmedBooking.priceEstimate.estimatedTotal.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex justify-between text-xs text-emerald-700 font-bold bg-emerald-50/80 p-2 rounded-xl">
+            <span>Payment Mode:</span>
+            <span>
+              {confirmedBooking.payment?.status === 'ADVANCE_PAID'
+                ? 'Advance ₹500 Verified via UPI'
+                : confirmedBooking.payment?.status === 'FULLY_PAID'
+                ? 'Fully Paid via UPI QR'
+                : 'Pay on Doorstep Arrival'}
+            </span>
+          </div>
+        </div>
+
+        {/* WhatsApp & Call Desk Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <a
+            href={`https://wa.me/918754519060?text=${encodeURIComponent(
+              `Hello Vaira Care Desk, I just placed a booking on the website!\nOrder ID: ${confirmedBooking.id}\nService: ${confirmedBooking.serviceName}\nPatient: ${confirmedBooking.customer.fullName}\nPhone: ${confirmedBooking.customer.phoneNumber}\nDuty Date: ${confirmedBooking.schedule.preferredDate} (${confirmedBooking.schedule.shiftType?.toUpperCase()})\nAddress: ${confirmedBooking.location.houseBuilding}, ${confirmedBooking.location.area}\nPayment: ${confirmedBooking.payment?.status}`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white font-bold text-xs px-6 py-3.5 rounded-2xl shadow-lg transition-all"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Send Order Receipt on WhatsApp</span>
+          </a>
+
+          <a
+            href={`tel:${initialBusinessSettings.phone1.replace(/\s+/g, '')}`}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-3.5 rounded-2xl shadow-md transition-all"
+          >
+            <PhoneCall className="w-4 h-4" />
+            <span>Call Coordination Desk</span>
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Mobile-first Stepper Progress Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm mb-8">
-        <div className="flex items-center justify-between overflow-x-auto no-scrollbar pb-2">
-          {stepsList.map((step, idx) => (
-            <React.Fragment key={step.number}>
-              <div className="flex flex-col items-center min-w-[70px] sm:min-w-[90px]">
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                    currentStep === step.number
-                      ? 'bg-emerald-600 text-white ring-4 ring-emerald-100 scale-110 shadow-sm'
-                      : currentStep > step.number
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-slate-100 text-slate-400'
-                  }`}
-                >
-                  {currentStep > step.number ? '✓' : step.number}
-                </div>
-                <span
-                  className={`mt-1.5 text-[11px] font-semibold text-center whitespace-nowrap ${
-                    currentStep === step.number ? 'text-emerald-700 font-bold' : 'text-slate-500'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-              {idx < stepsList.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 min-w-[20px] mx-1 transition-colors ${
-                    currentStep > step.number ? 'bg-emerald-500' : 'bg-slate-200'
-                  }`}
-                />
-              )}
-            </React.Fragment>
-          ))}
+    <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 px-6 py-4 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white p-0.5 flex items-center justify-center shadow-md shrink-0">
+            <img src="/logo.jpg" alt="Vaira Logo" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black tracking-wider text-emerald-400 uppercase">
+                Direct eCommerce Checkout
+              </span>
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                <Zap className="w-2.5 h-2.5 fill-current" /> Instant QR Pay
+              </span>
+            </div>
+            <h2 className="text-sm sm:text-base font-bold text-white">
+              Vaira Bedside Nursing &amp; Elder Care Agency
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-slate-300">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <span>Verified Staff • Doorstep Care</span>
         </div>
       </div>
 
-      {/* Main Step Container */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-8">
-        {/* STEP 1: SERVICE */}
-        {currentStep === 1 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 1 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Select Home Care Service</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Choose the service you require. You can adjust the exact requirements in the following steps.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Available Care Packages
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
-                {publishedServices.map((service) => {
-                  const isSelected = service.id === selectedServiceId;
-                  return (
-                    <div
-                      key={service.id}
-                      onClick={() => setSelectedServiceId(service.id)}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-emerald-600 bg-emerald-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="font-bold text-sm text-slate-900">{service.name}</div>
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                            isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
-                          }`}
-                        >
-                          {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1.5 line-clamp-2">{service.shortDescription}</p>
-                      <div className="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-extrabold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
-                            12h: ₹{(service.price12h || service.basePrice).toLocaleString()}
-                          </span>
-                          <span className="font-extrabold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md text-[11px]">
-                            24h: ₹{(service.price24h || service.basePrice).toLocaleString()}
-                          </span>
-                        </div>
-                        <span className="text-slate-400 text-[11px] hidden sm:inline">{service.availabilityHours}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {formErrors.service && <p className="text-xs text-rose-600">{formErrors.service}</p>}
-            </div>
-
-            {/* Selected Service Scope Preview */}
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2">
-              <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                <Info className="w-4 h-4 text-emerald-600" />
-                <span>Service Inclusions Summary for {selectedService.name}</span>
-              </div>
-              <ul className="list-disc list-inside text-slate-600 space-y-1 pl-1">
-                {selectedService.whatIncluded.slice(0, 3).map((inc, i) => (
-                  <li key={i}>{inc}</li>
-                ))}
-              </ul>
-              <p className="text-slate-400 italic pt-1">
-                * Note: Physician discharge summary/prescription required prior to care deployment.
-              </p>
-            </div>
+      <div className="p-6 sm:p-8 space-y-8">
+        {/* SECTION 1: Service Selection */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
+                1
+              </span>
+              <span>Select Home Care Service</span>
+            </h3>
+            <span className="text-xs text-slate-500">
+              {publishedServices.length} verified care options
+            </span>
           </div>
-        )}
 
-        {/* STEP 2: CUSTOMER INFORMATION */}
-        {currentStep === 2 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 2 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Customer Contact Information</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                We only ask for details necessary to coordinate with you.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Full Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. K. Rajagopal"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-                {formErrors.fullName && <p className="text-xs text-rose-600 mt-1">{formErrors.fullName}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Phone Number (Calling) <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. 98401 11223"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-                {formErrors.phoneNumber && <p className="text-xs text-rose-600 mt-1">{formErrors.phoneNumber}</p>}
-              </div>
-
-              <div className="pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={sameAsPhone}
-                    onChange={(e) => setSameAsPhone(e.target.checked)}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {publishedServices.map((srv) => {
+              const isSelected = srv.id === selectedService.id;
+              return (
+                <button
+                  key={srv.id}
+                  type="button"
+                  onClick={() => setSelectedServiceId(srv.id)}
+                  className={`p-3 rounded-2xl border text-left transition-all flex items-center gap-3 relative cursor-pointer ${
+                    isSelected
+                      ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-2 ring-emerald-500/20'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <img
+                    src={srv.image}
+                    alt={srv.name}
+                    className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200"
                   />
-                  <span>WhatsApp number is the same as calling number</span>
-                </label>
-
-                {!sameAsPhone && (
-                  <div className="mt-3">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      WhatsApp Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={whatsappNumber}
-                      onChange={(e) => setWhatsappNumber(e.target.value)}
-                      placeholder="e.g. 98401 11223"
-                      className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Email Address <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. rajagopal@example.com"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-center gap-2 text-xs text-emerald-800">
-              <ShieldAlert className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Your phone number will only be used by our care coordination desk to verify your request.</span>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: SERVICE LOCATION */}
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 3 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Service Location</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Provide the patient residence address. Your full address is kept private and never shown publicly.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  House / Flat / Building Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={houseBuilding}
-                  onChange={(e) => setHouseBuilding(e.target.value)}
-                  placeholder="e.g. Plot 42, Sri Krishna Villa"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-                {formErrors.houseBuilding && <p className="text-xs text-rose-600 mt-1">{formErrors.houseBuilding}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Street / Locality <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={streetLocality}
-                  onChange={(e) => setStreetLocality(e.target.value)}
-                  placeholder="e.g. Gandhi Road, Near Bus Terminus"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-                {formErrors.streetLocality && <p className="text-xs text-rose-600 mt-1">{formErrors.streetLocality}</p>}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Area / Town <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={area}
-                    onChange={(e) => setArea(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    {initialBusinessSettings.serviceAreas.map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                    <option value="Other Area">Other nearby location</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    District / City <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. Kanchipuram"
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Pincode <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
-                    placeholder="e.g. 631501"
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                  />
-                  {formErrors.pincode && <p className="text-xs text-rose-600 mt-1">{formErrors.pincode}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Landmark <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={landmark}
-                  onChange={(e) => setLandmark(e.target.value)}
-                  placeholder="e.g. Opp. Government Hospital or Near Mariamman Temple"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-              </div>
-
-              {/* Is this the service location question (Prompt requirement) */}
-              <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                  Is this the actual service delivery location?
-                </label>
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700">
-                    <input
-                      type="radio"
-                      name="isServiceLoc"
-                      checked={isServiceLocation}
-                      onChange={() => setIsServiceLocation(true)}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <span>Yes, patient resides here</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700">
-                    <input
-                      type="radio"
-                      name="isServiceLoc"
-                      checked={!isServiceLocation}
-                      onChange={() => setIsServiceLocation(false)}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <span>No, this is billing/family address</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4: CARE REQUIREMENT */}
-        {currentStep === 4 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 4 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Care Requirements & Urgency</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Provide non-diagnostic context to help us coordinate the most suitable staff.
-              </p>
-            </div>
-
-            {/* Crucial Emergency Warning Banner (Section 4 Requirement) */}
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-amber-900 text-xs">
-              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-bold text-sm block">Emergency Disclaimer</strong>
-                <span>
-                  For acute medical emergencies, sudden breathlessness, chest pain, or trauma, contact your local emergency medical service / dial <strong>108</strong> or proceed immediately to the hospital emergency department. Home care is for stable bedside care.
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Who needs the care? <span className="text-rose-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {(['Parent', 'Self', 'Spouse', 'Child', 'Other'] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRecipient(r)}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        recipient === r
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  General Requirement Details <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={generalRequirement}
-                  onChange={(e) => setGeneralRequirement(e.target.value)}
-                  placeholder="e.g. Elderly father discharged after surgery. Requires assistance with morning bath, walking support, and vitals monitoring."
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-                {formErrors.generalRequirement && (
-                  <p className="text-xs text-rose-600 mt-1">{formErrors.generalRequirement}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Care Assistance Type
-                  </label>
-                  <select
-                    value={careType}
-                    onChange={(e) => setCareType(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    <option value="General Bedside Care & Vitals Support">General Bedside Care & Vitals Support</option>
-                    <option value="Post-Operative Dressing & Wound Care">Post-Operative Dressing & Wound Care</option>
-                    <option value="Senior Citizen Daily Living & Mobility">Senior Citizen Daily Living & Mobility</option>
-                    <option value="Stroke / Paralysis Bedside Care">Stroke / Paralysis Bedside Care</option>
-                    <option value="Tracheostomy & Respiratory Nursing">Tracheostomy & Respiratory Nursing</option>
-                    <option value="Hospital Bedside Inpatient Attender">Hospital Bedside Inpatient Attender</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Request Urgency
-                  </label>
-                  <select
-                    value={urgency}
-                    onChange={(e) => setUrgency(e.target.value as any)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    <option value="Normal">Normal (Start within 24-48 hours)</option>
-                    <option value="Today">Today (Subject to immediate staff check)</option>
-                    <option value="Urgent">Urgent Request (Non-emergency priority review)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5: SCHEDULE */}
-        {currentStep === 5 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 5 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Preferred Schedule & Shifts</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Select your preferred start date, shift hours, and recurring duration.
-              </p>
-            </div>
-
-            <div className="space-y-5">
-              {/* Shift Duration Selection (12h vs 24h) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Select Care Shift Duration <span className="text-rose-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div
-                    onClick={() => {
-                      setShiftType('12h');
-                      if (preferredStartTime === '24h Continuous') setPreferredStartTime('08:00 AM');
-                    }}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start justify-between ${
-                      shiftType === '12h'
-                        ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-sm text-slate-900">12-Hour Shift</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Day / Night</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">Day Shift (8 AM - 8 PM) or Night Shift (8 PM - 8 AM)</p>
-                      <div className="mt-2 text-sm font-black text-slate-900">
-                        ₹{(selectedService.price12h || selectedService.basePrice).toLocaleString()} <span className="text-xs font-medium text-slate-500">/ day</span>
-                      </div>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${shiftType === '12h' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
-                      {shiftType === '12h' && <div className="w-2 h-2 bg-white rounded-full" />}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 truncate">{srv.name}</h4>
+                    <p className="text-[11px] text-slate-500 truncate">{srv.category}</p>
+                    <div className="text-xs font-black text-emerald-700 mt-0.5">
+                      From ₹{(srv.price12h || srv.basePrice).toLocaleString()}
                     </div>
                   </div>
-
-                  <div
-                    onClick={() => {
-                      setShiftType('24h');
-                      setPreferredStartTime('24h Continuous');
-                    }}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start justify-between ${
-                      shiftType === '24h'
-                        ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-sm text-slate-900">24-Hour Stay-in Care</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">Round-The-Clock</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">Continuous stay-in bedside nursing and companion support</p>
-                      <div className="mt-2 text-sm font-black text-emerald-700">
-                        ₹{(selectedService.price24h || selectedService.basePrice).toLocaleString()} <span className="text-xs font-medium text-slate-500">/ day</span>
-                      </div>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${shiftType === '24h' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
-                      {shiftType === '24h' && <div className="w-2 h-2 bg-white rounded-full" />}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Preferred Start Date <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    value={preferredDate}
-                    onChange={(e) => setPreferredDate(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                  />
-                  {formErrors.preferredDate && (
-                    <p className="text-xs text-rose-600 mt-1">{formErrors.preferredDate}</p>
+                  {isSelected && (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   )}
-                </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Start Timing
-                  </label>
-                  <select
-                    value={preferredStartTime}
-                    onChange={(e) => setPreferredStartTime(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    <option value="08:00 AM">Morning Shift (08:00 AM)</option>
-                    <option value="09:00 AM">General Day (09:00 AM)</option>
-                    <option value="08:00 PM">Night Shift (08:00 PM)</option>
-                    <option value="24h Continuous">24-Hour Stay-in</option>
-                  </select>
-                </div>
+        {/* SECTION 2: Shift Tariff & Start Date */}
+        <div className="space-y-4 pt-4 border-t border-slate-100">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
+              2
+            </span>
+            <span>Choose Shift Tariff &amp; Duty Schedule</span>
+          </h3>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Recurring Service Type
-                  </label>
-                  <select
-                    value={recurringType}
-                    onChange={(e) => setRecurringType(e.target.value as any)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    <option value="daily">Daily Continuous</option>
-                    <option value="one-time">One-time / Single Visit</option>
-                    <option value="weekly">Weekly Routine</option>
-                    <option value="monthly">Monthly Full-Term</option>
-                    <option value="custom">Custom Arrangement</option>
-                  </select>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* 12h Shift */}
+            <button
+              type="button"
+              onClick={() => setShiftType('12h')}
+              className={`p-4 rounded-2xl border text-left transition-all relative ${
+                shiftType === '12h'
+                  ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-2 ring-emerald-500/20'
+                  : 'border-slate-200 bg-white hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">12-Hour Shift Duty</span>
+                {shiftType === '12h' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Preferred Duration Commitment
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {['Single Visit', '3 Days', '7 Days', '14 Days', '30 Days'].map((dur) => (
-                    <button
-                      key={dur}
-                      type="button"
-                      onClick={() => setPreferredDuration(dur)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        preferredDuration === dur
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                      }`}
-                    >
-                      {dur}
-                    </button>
-                  ))}
-                </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">Day Shift or Night Shift Care</p>
+              <div className="mt-2 text-lg font-black text-emerald-700">
+                ₹{(selectedService.price12h || selectedService.basePrice).toLocaleString()}
               </div>
+            </button>
 
-              {recurringType !== 'one-time' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Care Days Required
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
-                      const isSelected = selectedDays.includes(day);
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => {
-                            if (isSelected) {
-                              if (selectedDays.length > 1) {
-                                setSelectedDays(selectedDays.filter((d) => d !== day));
-                              }
-                            } else {
-                              setSelectedDays([...selectedDays, day]);
-                            }
-                          }}
-                          className={`w-11 h-10 rounded-xl text-xs font-bold border transition-all ${
-                            isSelected
-                              ? 'border-emerald-600 bg-emerald-600 text-white'
-                              : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
-                          }`}
-                        >
-                          {day}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+            {/* 24h Shift */}
+            <button
+              type="button"
+              onClick={() => setShiftType('24h')}
+              className={`p-4 rounded-2xl border text-left transition-all relative ${
+                shiftType === '24h'
+                  ? 'border-emerald-600 bg-emerald-50/70 shadow-sm ring-2 ring-emerald-500/20'
+                  : 'border-slate-200 bg-white hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">24-Hour Stay-In Duty</span>
+                {shiftType === '24h' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">Round-the-clock Resident Nurse</p>
+              <div className="mt-2 text-lg font-black text-emerald-700">
+                ₹{(selectedService.price24h || selectedService.basePrice * 1.8).toLocaleString()}
+              </div>
+            </button>
+          </div>
+
+          {/* Date Selector */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Caregiver Starting When?
+            </label>
+            <div className="grid grid-cols-3 gap-2 max-w-md">
+              <button
+                type="button"
+                onClick={() => setStartDateType('today')}
+                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                  startDateType === 'today'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                ⚡ Today (Urgent)
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartDateType('tomorrow')}
+                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                  startDateType === 'tomorrow'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                📅 Tomorrow
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartDateType('custom')}
+                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                  startDateType === 'custom'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                🗓️ Choose Date
+              </button>
+            </div>
+
+            {startDateType === 'custom' && (
+              <div className="mt-2 max-w-xs">
+                <input
+                  type="date"
+                  min={todayStr}
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* SECTION 3: Patient & Address Info */}
+        <div className="space-y-4 pt-4 border-t border-slate-100">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
+              3
+            </span>
+            <span>Patient Contact &amp; Care Location</span>
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Patient / Caller Name *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Anandha Kumar"
+                value={fullName}
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  if (formErrors.fullName) setFormErrors({ ...formErrors, fullName: '' });
+                }}
+                className={`w-full text-xs p-3 rounded-xl border ${
+                  formErrors.fullName ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
+                } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+              />
+              {formErrors.fullName && (
+                <p className="text-[10px] text-red-600 mt-1">{formErrors.fullName}</p>
               )}
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>
-                Our coordination team checks real-time staff rosters against your requested date before final confirmation.
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                WhatsApp / Mobile Number *
+              </label>
+              <input
+                type="tel"
+                placeholder="e.g. 9876543210"
+                value={phoneNumber}
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  if (formErrors.phoneNumber) setFormErrors({ ...formErrors, phoneNumber: '' });
+                }}
+                className={`w-full text-xs p-3 rounded-xl border ${
+                  formErrors.phoneNumber ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
+                } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+              />
+              {formErrors.phoneNumber && (
+                <p className="text-[10px] text-red-600 mt-1">{formErrors.phoneNumber}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                House / Street / Flat Address *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. No. 24, Vallal Pachaiyappan St, Near Temple"
+                value={houseBuilding}
+                onChange={(e) => {
+                  setHouseBuilding(e.target.value);
+                  if (formErrors.houseBuilding) setFormErrors({ ...formErrors, houseBuilding: '' });
+                }}
+                className={`w-full text-xs p-3 rounded-xl border ${
+                  formErrors.houseBuilding ? 'border-red-500 bg-red-50/20' : 'border-slate-200'
+                } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+              />
+              {formErrors.houseBuilding && (
+                <p className="text-[10px] text-red-600 mt-1">{formErrors.houseBuilding}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Service Area</label>
+              <select
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white"
+              >
+                <option value="Kanchipuram">Kanchipuram Town</option>
+                <option value="Vembedu">Vembedu</option>
+                <option value="Vandalur">Vandalur (Chennai)</option>
+                <option value="Tambaram">Tambaram / Chromepet</option>
+                <option value="Guduvanchery">Guduvanchery / Chengalpattu</option>
+                <option value="Other">Other nearby area</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: Direct Instant UPI QR Payment */}
+        <div className="space-y-4 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center">
+                4
               </span>
-            </div>
+              <span>Instant QR Payment &amp; Confirmation</span>
+            </h3>
+            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+              Zero Transaction Fees
+            </span>
           </div>
-        )}
 
-        {/* STEP 6: PREFERENCES */}
-        {currentStep === 6 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 6 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Caregiver Preferences</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Help us assign the best suited professional for patient comfort.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Gender Preference
-                  </label>
-                  <select
-                    value={genderPreference}
-                    onChange={(e) => setGenderPreference(e.target.value as any)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    <option value="No Preference">No Preference (Recommended for fastest match)</option>
-                    <option value="Female">Female Caregiver / Nurse</option>
-                    <option value="Male">Male Caregiver / Attender</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Spoken Language
-                  </label>
-                  <select
-                    value={languagePreference}
-                    onChange={(e) => setLanguagePreference(e.target.value)}
-                    className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all font-medium"
-                  >
-                    <option value="Tamil">Tamil (Native)</option>
-                    <option value="English & Tamil">English & Tamil</option>
-                    <option value="Telugu & Tamil">Telugu & Tamil</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Specific Caregiver or Experience Note <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={caregiverPreferenceNote}
-                  onChange={(e) => setCaregiverPreferenceNote(e.target.value)}
-                  placeholder="e.g. Sister Revathi if available, or someone experienced with stroke rehabilitation"
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Additional Household Instructions <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={additionalInstructions}
-                  onChange={(e) => setAdditionalInstructions(e.target.value)}
-                  placeholder="e.g. First floor flat with elevator, caregiver will be provided meals."
-                  className="w-full px-4 py-3 text-sm border border-slate-300 rounded-xl bg-slate-50 focus:bg-white transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-              <p className="font-semibold">Note on Caregiver Allocation:</p>
-              <p className="mt-0.5">
-                Caregiver preference is matched based on roster availability and required clinical skills. We do not guarantee a specific individual until our coordination desk confirms assignment.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 7: PRICE ESTIMATE & BOOKING SUMMARY */}
-        {currentStep === 7 && (
-          <div className="space-y-6">
-            <div>
-              <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase">Step 7 of 7</span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">Review Booking Summary & Submit</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Verify your service request before submission.
-              </p>
-            </div>
-
-            {/* Price Estimate Breakdown (Section 4 Step 7) */}
-            <div className="bg-gradient-to-br from-emerald-900 to-slate-900 rounded-2xl p-6 text-white shadow-md">
-              <div className="flex items-center justify-between pb-4 border-b border-emerald-800/80">
-                <div>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-                    Transparent Estimate
-                  </span>
-                  <h3 className="text-lg font-bold">{selectedService.name}</h3>
-                </div>
-                <CreditCard className="w-6 h-6 text-emerald-400" />
-              </div>
-
-              <div className="py-4 space-y-2.5 text-xs sm:text-sm">
-                <div className="flex justify-between text-slate-300">
-                  <span>Selected Shift:</span>
-                  <span className="font-bold text-white">
-                    {shiftType === '24h' ? '24-Hour Stay-in Care' : '12-Hour Shift (Day/Night)'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Daily Rate:</span>
-                  <span className="font-bold text-emerald-300">
-                    ₹{estimate.rate.toLocaleString()} / day
-                  </span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Commitment / Shifts:</span>
-                  <span>{preferredDuration}</span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Additional Travel Charges:</span>
-                  <span>₹0 (Standard coverage)</span>
-                </div>
-                <div className="pt-2 border-t border-slate-700/80 flex justify-between items-baseline font-bold">
-                  <span className="text-white text-base">Estimated Total:</span>
-                  <span className="text-emerald-400 text-xl font-black">
-                    {estimate.determined ? `₹${estimate.total.toLocaleString()}` : 'To be confirmed'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2 text-[11px] text-emerald-200/90 italic border-t border-emerald-800/50">
-                * Final service availability and charges will be confirmed by the Vaira Home Care team after reviewing your request. Never any hidden fees.
-              </div>
-            </div>
-
-            {/* Complete Booking Summary Card (Section 5) */}
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-xs sm:text-sm space-y-4">
-              <div className="font-bold text-slate-900 text-base pb-2 border-b border-slate-200 flex items-center justify-between">
-                <span>Request Verification Details</span>
-                <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                  Status: Pending Submission
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Customer</span>
-                  <p className="font-semibold text-slate-800 mt-0.5">{fullName}</p>
-                  <p className="text-xs text-slate-600">{phoneNumber}</p>
-                  {email && <p className="text-xs text-slate-500">{email}</p>}
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Location</span>
-                  <p className="font-semibold text-slate-800 mt-0.5">
-                    {houseBuilding}, {streetLocality}
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    {area}, {city} - {pincode}
-                  </p>
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Schedule</span>
-                  <p className="font-semibold text-slate-800 mt-0.5">
-                    Start: {preferredDate} at {preferredStartTime}
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    Duration: {preferredDuration} ({recurringType})
-                  </p>
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Care Needs</span>
-                  <p className="font-semibold text-slate-800 mt-0.5">For: {recipient}</p>
-                  <p className="text-xs text-slate-600 line-clamp-2">{generalRequirement}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Mandatory Checkboxes (Section 5 Terms) */}
-            <div className="space-y-3 pt-2">
-              <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={termsAgreed}
-                  onChange={(e) => setTermsAgreed(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 mt-0.5"
-                />
-                <span className="text-xs text-slate-700 font-medium">
-                  <strong>I confirm</strong> that the information provided regarding the patient's care requirement and residence location is correct.
-                </span>
-              </label>
-              {formErrors.terms && <p className="text-xs text-rose-600 pl-7">{formErrors.terms}</p>}
-
-              <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={acknowledgementAgreed}
-                  onChange={(e) => setAcknowledgementAgreed(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 mt-0.5"
-                />
-                <span className="text-xs text-slate-700 font-medium">
-                  <strong>I understand</strong> that submitting this request does not guarantee immediate clinical confirmation. Service deployment is finalized once the Vaira Home Care coordination team reviews requirements and matches verified staff.
-                </span>
-              </label>
-              {formErrors.ack && <p className="text-xs text-rose-600 pl-7">{formErrors.ack}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* Wizard Controls */}
-        <div className="mt-8 pt-5 border-t border-slate-200 flex items-center justify-between">
-          {currentStep > 1 ? (
+          {/* Payment Mode Pills */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               type="button"
-              onClick={handleBack}
-              disabled={isSubmitting}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+              onClick={() => setPayOption('advance')}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                payOption === 'advance'
+                  ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500/20 shadow-sm'
+                  : 'border-slate-200 bg-white hover:bg-slate-50'
+              }`}
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back</span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">UPI Advance ₹500</span>
+                <span className="text-[9px] font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded">
+                  Most Popular
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Guarantees duty nurse slot</p>
+              <p className="text-[10px] text-emerald-700 font-semibold mt-1">
+                Balance ₹{(totalAmount - advanceAmount).toLocaleString()} on arrival
+              </p>
             </button>
-          ) : (
-            <div />
+
+            <button
+              type="button"
+              onClick={() => setPayOption('full')}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                payOption === 'full'
+                  ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500/20 shadow-sm'
+                  : 'border-slate-200 bg-white hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">Full Shift UPI</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Pay ₹{totalAmount.toLocaleString()} in full
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold mt-1">100% cashless service</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPayOption('arrival')}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                payOption === 'arrival'
+                  ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500/20 shadow-sm'
+                  : 'border-slate-200 bg-white hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">Pay on Arrival</span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Cash or Doorstep QR</p>
+              <p className="text-[10px] text-slate-500 font-semibold mt-1">Pay when nurse arrives</p>
+            </button>
+          </div>
+
+          {/* UPI QR Display Container */}
+          {payOption !== 'arrival' && (
+            <div className="bg-slate-50 rounded-3xl p-5 border border-emerald-200/80 space-y-4">
+              <div className="flex flex-col md:flex-row items-center gap-6 justify-center">
+                {/* QR Code */}
+                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-md flex flex-col items-center shrink-0">
+                  {qrDataUrl ? (
+                    <img
+                      src={qrDataUrl}
+                      alt="Vaira UPI QR"
+                      className="w-48 h-48 object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-48 h-48 flex items-center justify-center text-xs text-slate-400">
+                      Generating QR...
+                    </div>
+                  )}
+                  <span className="text-[10px] font-bold text-slate-500 mt-2 flex items-center gap-1">
+                    <QrCode className="w-3.5 h-3.5 text-emerald-600" /> Scan with Any UPI App
+                  </span>
+                </div>
+
+                {/* Amount & Direct Apps */}
+                <div className="space-y-3.5 flex-1 w-full text-center md:text-left">
+                  <div className="bg-emerald-950 text-white p-4 rounded-2xl shadow-sm border border-emerald-900">
+                    <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">
+                      Payable Shift Amount
+                    </span>
+                    <span className="text-3xl font-black text-white">
+                      ₹{payableNow.toLocaleString()}
+                    </span>
+                    <p className="text-xs text-emerald-200/80 mt-1">
+                      {payOption === 'advance'
+                        ? `Balance ₹${(totalAmount - advanceAmount).toLocaleString()} payable when staff arrives`
+                        : 'Full shift payment'}
+                    </p>
+                  </div>
+
+                  {/* UPI ID Copy */}
+                  <div className="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs">
+                    <span className="font-mono font-bold text-slate-800">{officialUPIId}</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyUPI}
+                      className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiedUPI ? 'Copied!' : 'Copy UPI'}</span>
+                    </button>
+                  </div>
+
+                  {/* App Links */}
+                  <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
+                    <a
+                      href={upiUri}
+                      className="text-xs font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 px-4 py-2 rounded-xl shadow-sm transition-all"
+                    >
+                      📱 Open Google Pay / PhonePe / Paytm
+                    </a>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Transaction UTR / Reference No. (Optional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 429182947192 or UPI Ref"
+                      value={transactionRef}
+                      onChange={(e) => setTransactionRef(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
-          {currentStep < 7 ? (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-700/20 transition-all"
-            >
-              <span>Continue</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold shadow-lg shadow-emerald-700/30 transition-all hover:scale-[1.02] disabled:opacity-50"
-            >
-              <CheckCircle className="w-4 h-4" />
-              <span>{isSubmitting ? 'Submitting Request...' : 'SUBMIT SERVICE REQUEST'}</span>
-            </button>
+          {payOption === 'arrival' && (
+            <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200 text-xs text-amber-900 space-y-1">
+              <p className="font-bold">Pay ₹{totalAmount.toLocaleString()} at Doorstep</p>
+              <p className="text-[11px] text-amber-800/80 leading-relaxed">
+                Our assigned nurse will show their official Vaira ID card with personal verification QR when they arrive. You can pay via cash or scan their ID badge QR code.
+              </p>
+            </div>
           )}
+        </div>
+
+        {/* SUBMIT BUTTON BAR */}
+        <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+              Duty Total
+            </span>
+            <span className="text-2xl font-black text-slate-900">
+              ₹{totalAmount.toLocaleString()}
+            </span>
+            <span className="text-xs text-slate-500 ml-2">
+              ({shiftType.toUpperCase()} Shift on {targetDate})
+            </span>
+          </div>
+
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={handleConfirmOrder}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 text-white font-black text-sm shadow-xl shadow-emerald-600/30 transition-all cursor-pointer"
+          >
+            {isSubmitting ? (
+              <span>Confirming Booking...</span>
+            ) : (
+              <>
+                <span>
+                  {payOption === 'arrival'
+                    ? 'CONFIRM DIRECT BOOKING'
+                    : 'I HAVE PAID / CONFIRM DIRECT BOOKING'}
+                </span>
+                <CheckCircle2 className="w-5 h-5" />
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

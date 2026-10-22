@@ -107,18 +107,22 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-600 to-teal-600 flex items-center justify-center text-white shadow-md shadow-green-600/25 group-hover:shadow-green-600/40 group-hover:scale-105 transition-all duration-300">
-                <Heart className="w-4 h-4" />
+              <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white shadow-md shadow-emerald-900/10 border border-slate-200/80 group-hover:scale-105 transition-all duration-300 p-0.5 flex items-center justify-center">
+                <img
+                  src="/logo.jpg"
+                  alt="Vaira Nursing Home Care Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[17px] font-black tracking-tight text-slate-900 leading-none">VAIRA</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-md">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                     Home Care
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">
-                  Compassionate Bedside Healthcare
+                <p className="text-[10px] text-slate-500 font-medium leading-none mt-0.5">
+                  Nursing &amp; Elderly Care Agency
                 </p>
               </div>
             </Link>

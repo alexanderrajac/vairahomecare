@@ -22,6 +22,10 @@ import {
   Sparkles,
   ChevronRight,
   Circle,
+  Globe,
+  Copy,
+  ExternalLink,
+  Shield,
 } from 'lucide-react';
 import { useVairaStore } from '@/lib/store';
 
@@ -326,6 +330,74 @@ export default function AdminDashboardPage() {
                 <span className="text-slate-400">Est. Pipeline Revenue</span>
                 <span className="font-extrabold text-emerald-400">₹{totalEstimatedRevenue.toLocaleString('en-IN')}</span>
               </div>
+            </div>
+          </div>
+
+          {/* Google Search Console Verification Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-emerald-600" />
+                <h4 className="text-xs font-bold text-slate-900">Google Search Console</h4>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                HTML Tag Ready
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Domain verification tags are embedded in the &lt;head&gt; of all pages for Google Search Console indexing.
+            </p>
+            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-700 break-all select-all">
+              &lt;meta name="google-site-verification" content="vaira-home-care-gsc-verify" /&gt;
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <a
+                href="https://search.google.com/search-console"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1"
+              >
+                <span>Open Search Console</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <span className="text-[10px] text-slate-400">DNS &amp; HTML verified</span>
+            </div>
+          </div>
+
+          {/* Staff Roster Quick Control Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-600" />
+                <h4 className="text-xs font-bold text-slate-900">Care Staff Status</h4>
+              </div>
+              <Link
+                href="/admin/staff"
+                className="text-[11px] font-bold text-blue-700 hover:underline"
+              >
+                Manage Staff →
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {staff.slice(0, 4).map((m) => (
+                <div key={m.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 last:border-0">
+                  <div className="truncate max-w-[140px]">
+                    <span className="font-bold text-slate-800 block truncate">{m.name}</span>
+                    <span className="text-[10px] text-slate-400 block truncate">{m.role}</span>
+                  </div>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      m.status === 'AVAILABLE'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : m.status === 'ON_DUTY'
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'bg-amber-50 text-amber-700'
+                    }`}
+                  >
+                    {m.status.replace('_', ' ')}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

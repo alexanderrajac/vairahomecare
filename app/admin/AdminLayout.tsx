@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   ChevronRight,
   Activity,
+  Users,
+  UserCheck,
 } from 'lucide-react';
 
 const adminNavItems = [
@@ -24,6 +26,11 @@ const adminNavItems = [
     label: 'CRM Requests',
     href: '/admin/requests',
     icon: CalendarCheck,
+  },
+  {
+    label: 'Staff & Roles',
+    href: '/admin/staff',
+    icon: Users,
   },
   {
     label: 'Service Config',
@@ -45,8 +52,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Top Admin Bar */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 border-b border-white/5 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-            <ShieldCheck className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-white p-0.5 flex items-center justify-center shadow-md shrink-0">
+            <img src="/logo.jpg" alt="Vaira Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-black text-white tracking-wide">VAIRA</span>
@@ -59,6 +66,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/staff"
+            className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/50 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Staff Duty Portal</span>
+          </Link>
           <Activity className="w-3.5 h-3.5 text-slate-400" />
           <span className="text-[11px] text-slate-400 font-medium">
             {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })}

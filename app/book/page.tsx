@@ -19,10 +19,10 @@ function BookingContent() {
           <span>Vaira Care Coordination Desk</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-          Home Care Service Request
+          Direct Home Care Checkout
         </h1>
         <p className="text-xs sm:text-sm text-slate-600">
-          Complete the 7 quick steps below to submit your service request. Our coordination team will review availability and contact you promptly.
+          Fast eCommerce checkout. Select your required shift, enter patient details, and confirm with instant UPI QR payment or pay on doorstep arrival.
         </p>
       </div>
 
